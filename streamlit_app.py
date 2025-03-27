@@ -84,9 +84,9 @@ def main():
             S_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=S_base, step=0.01, key="input_S_base")
         col_ab1, col_ab2 = st.columns([3, 1])
         with col_ab1:
-            As_base = st.slider("As осн. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01, key="slider_As_base")
+            As_base_val = st.slider("As осн. (%)", min_value=0.0, max_value=30.0, value=0.0, step=0.01, key="slider_As_base")
         with col_ab2:
-            As_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=As_base, step=0.01, key="input_As_base")
+            As_base = st.number_input(" ", min_value=0.0, max_value=30.0, value=As_base_val, step=0.01, key="input_As_base")
         col_sbseq1, col_sbseq2 = st.columns([3, 1])
         with col_sbseq1:
             Seq_base = st.slider("Seq осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_base")
@@ -94,10 +94,20 @@ def main():
             Seq_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=Seq_base, step=0.01, key="input_Seq_base", help="Если не задан — будет рассчитан автоматически")
 
         st.subheader("Параметры автоклава")
-        work_hours_year = st.slider("Рабочих часов в году", min_value=1000, max_value=9000, value=7500, step=100, key="slider_hours")
-        st.number_input("Рабочих часов в году", min_value=0, max_value=9000, value=work_hours_year, step=100, key="input_hours")
-        seq_productivity_per_hour = st.slider("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=4.07, step=0.01, key="slider_prod")
-        st.number_input("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=seq_productivity_per_hour, step=0.01, key="input_prod")
+        col_hours1, col_hours2 = st.columns([3, 1])
+        with col_hours1:
+            col_hours1, col_hours2 = st.columns([3, 1])
+        with col_hours1:
+            work_hours_year_val = st.slider("Рабочих часов в году", min_value=1000, max_value=9000, value=7500, step=100, key="slider_hours")
+        with col_hours2:
+            work_hours_year = st.number_input(" ", min_value=1000, max_value=9000, value=work_hours_year_val, step=100, key="input_hours")
+        col_prod1, col_prod2 = st.columns([3, 1])
+        with col_prod1:
+            col_prod1, col_prod2 = st.columns([3, 1])
+        with col_prod1:
+            seq_productivity_per_hour_val = st.slider("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=4.07, step=0.01, key="slider_prod")
+        with col_prod2:
+            seq_productivity_per_hour = st.number_input(" ", min_value=0.1, max_value=10.0, value=seq_productivity_per_hour_val, step=0.01, key="input_prod")
 
         if mode_val == 1:
             st.subheader("Стороннее сырьё")
@@ -146,8 +156,11 @@ def main():
             Q_base = st.slider("Q осн. (т/год)", min_value=0.0, max_value=500000.0, value=140000.0, step=1000.0, key="slider_Q_base")
         with col_qb2:
             Q_base = st.number_input(" ", min_value=0.0, max_value=500000.0, value=Q_base, step=1000.0, key="input_Q_base")
-        Q_ext = st.slider("Q сторон. (т/год)", min_value=0.0, max_value=500000.0, value=38500.0, step=1000.0, key="slider_Q_ext")
-        st.number_input("Q сторон. (т/год) [опц.]", min_value=0.0, max_value=500000.0, value=Q_ext, step=1000.0, key="input_Q_ext")
+        col_qe1, col_qe2 = st.columns([3, 1])
+        with col_qe1:
+            Q_ext_val = st.slider("Q сторон. (т/год)", min_value=0.0, max_value=500000.0, value=38500.0, step=1000.0, key="slider_Q_ext")
+        with col_qe2:
+            Q_ext = st.number_input(" ", min_value=0.0, max_value=500000.0, value=Q_ext_val, step=1000.0, key="input_Q_ext")
         col_y1, col_y2 = st.columns([3, 1])
         with col_y1:
             yield_after_cond = st.slider("Выход после кондиционирования (%)", min_value=0.0, max_value=100.0, value=70.4, step=0.1, key="slider_yield")
