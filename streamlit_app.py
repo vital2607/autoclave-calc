@@ -2,8 +2,8 @@
 import streamlit as st
 import pandas as pd
 from fc_autoclave_calc import calc_fc_autoclave
+import io
 
-# Расшифровка переменных
 LABELS = {
     "S_base_%": "Сера в осн. (%)",
     "As_base_%": "Мышьяк в осн. (%)",
@@ -31,6 +31,32 @@ LABELS = {
     "Total_Au_kg": "Всего золота (кг)",
     "Mass_kek_fk_t": "КЕК ФК (т)"
 }
+
+# Форматирование чисел
+UNIT_FORMATS = {
+    "т": lambda x: f"{x:.0f}",
+    "%": lambda x: f"{x:.2f}",
+    "г/т": lambda x: f"{x:.2f}",
+    "шт": lambda x: f"{x:.0f}",
+    "кг": lambda x: f"{x:.0f}",
+    "": lambda x: f"{x:.3f}"  # по умолчанию
+}
+
+def format_value(key, value):
+    if value is None:
+        return ""
+    if "%" in key:
+        return UNIT_FORMATS["%"](value)
+    elif key.endswith("_t"):
+        return UNIT_FORMATS["т"](value)
+    elif key.endswith("g_t"):
+        return UNIT_FORMATS["г/т"](value)
+    elif key.endswith("_kg"):
+        return UNIT_FORMATS["кг"](value)
+    elif key.endswith("_used"):
+        return UNIT_FORMATS["шт"](value)
+    else:
+        return UNIT_FORMATS[""](value)
 
 def main():
     st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
@@ -86,13 +112,34 @@ def main():
         data = []
         for key, value in results.items():
             label = LABELS.get(key, key)
-            data.append({"Показатель": label, "Значение": value})
+            formatted = format_value(key, value)
+            data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
-        st.dataframe(df)
+        st.dataframe(df.sort_values(by="Показатель"))
 
-        csv = df.to_csv(index=False).encode('utf-8')
-        st.download_button("Скачать как CSV", data=csv, file_name="autoclave_result.csv", mime="text/csv")
+        # Сохраняем как XLSX с цветовой заливкой
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
+            df.to_excel(writer, index=False, sheet_name="autoclave")
+            workbook = writer.book
+            worksheet = writer.sheets["autoclave"]
+
+            format1 = workbook.add_format({"bg_color": "#DDEBF7"})
+            format2 = workbook.add_format({"bg_color": "#FCE4D6"})
+
+            for row in range(1, len(df) + 1):
+                fmt = format1 if row % 2 == 0 else format2
+                worksheet.set_row(row, None, fmt)
+
+            writer.save()
+
+        st.download_button(
+            label="Скачать как Excel (.xlsx)",
+            data=buffer,
+            file_name="autoclave_result.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 if __name__ == '__main__':
     main()
