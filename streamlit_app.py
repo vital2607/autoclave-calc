@@ -81,10 +81,10 @@ def main():
         st.markdown("### ⚙️ Параметры автоклава")
         col_hours1, col_hours2 = st.columns([3, 1])
         with col_hours2:
-            work_hours_year = st.number_input(" ", min_value=1000, max_value=9000, value=work_hours_year_val, step=100, key="input_hours")
+            work_hours_year = st.number_input("Рабочих часов в году", min_value=1000, max_value=9000, value=7500, step=100, key="input_hours")
         col_prod1, col_prod2 = st.columns([3, 1])
         with col_prod2:
-            seq_productivity_per_hour = st.number_input(" ", min_value=0.1, max_value=10.0, value=seq_productivity_per_hour_val, step=0.01, key="input_prod")
+            seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=4.07, step=0.01, key="input_prod")
 
         if mode_val == 1:
             st.markdown("---")
