@@ -132,8 +132,6 @@ def main():
                 fmt = format1 if row % 2 == 0 else format2
                 worksheet.set_row(row, None, fmt)
 
-            writer.save()
-
         st.download_button(
             label="Скачать как Excel (.xlsx)",
             data=buffer,
