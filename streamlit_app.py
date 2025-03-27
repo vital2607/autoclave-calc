@@ -80,12 +80,17 @@ def main():
 
         if mode_val == 1:
             st.subheader("Стороннее сырьё")
-        name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
-        Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
-        S_ext = st.number_input("S сторон. (%)", min_value=0.0)
-        As_ext = st.number_input("As сторон. (%)", min_value=0.0)
-        Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
-    else:
+            name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
+            Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
+            S_ext = st.number_input("S сторон. (%)", min_value=0.0)
+            As_ext = st.number_input("As сторон. (%)", min_value=0.0)
+            Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
+        else:
+            name_ext = ""
+            Au_ext = 0.0
+            S_ext = 0.0
+            As_ext = 0.0
+            Seq_ext = 0.0
         name_ext = ""
         Au_ext = 0.0
         S_ext = 0.0
