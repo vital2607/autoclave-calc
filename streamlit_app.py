@@ -70,12 +70,15 @@ def main():
 
     selected_template = "Концентрат 1"
     template = {}
-    template = TEMPLATES[selected_template]
+    template = {}
 
     mode = st.radio("Режим расчёта", ["1 – Два концентрата", "2 – Один концентрат"])
     mode_val = 1 if mode.startswith("1") else 2
 
     with st.form("input_form"):
+        reset = st.form_submit_button("Сбросить значения")
+        if reset:
+            st.experimental_rerun()
         st.subheader("Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value=selected_template)
         Au_base = st.number_input("Au осн. (г/т)", min_value=0.0)
