@@ -74,8 +74,8 @@ def main():
         Seq_base = st.number_input("Seq осн. (%)", min_value=0.0)
 
         st.subheader("Параметры автоклава")
-        work_hours_year = st.number_input("Рабочих часов в году", value=8000)
-        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=5.0)
+        work_hours_year = st.number_input("Рабочих часов в году", value=7500)
+        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=4.07)
 
         if mode_val == 1:
             st.subheader("Стороннее сырьё")
@@ -88,8 +88,8 @@ def main():
             name_ext, Au_ext, S_ext, As_ext, Seq_ext = None, None, None, None, None
 
         st.subheader("Целевые параметры")
-        As_target = st.number_input("Целевой As (%)", min_value=0.0)
-        k = st.number_input("Коэффициент k", value=1.0)
+        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=3.0)
+        k = st.number_input("Коэффициент k", value=0.371)
         Q_base = st.number_input("Q осн. (т/год) [опц.]", value=0.0)
         Q_ext = st.number_input("Q сторон. (т/год) [опц.]", value=0.0)
         yield_after_cond = st.number_input("Выход после кондиционирования (%)", value=100.0)
