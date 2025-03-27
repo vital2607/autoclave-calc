@@ -60,7 +60,7 @@ def format_value(key, value):
     elif key.endswith("_kg"):
         return UNIT_FORMATS["кг"](value)
     elif key.endswith("_used"):
-        return UNIT_FORMATS["шт"](value)
+        return f"{value:.2f}"
     else:
         return UNIT_FORMATS[""](value)
 
