@@ -69,7 +69,7 @@ def main():
     st.title("Расчёт флотоконцентрата и автоклавов")
 
     selected_template = "Концентрат 1"
-    template = {}), index=0)
+    template = {}
     template = TEMPLATES[selected_template]
 
     mode = st.radio("Режим расчёта", ["1 – Два концентрата", "2 – Один концентрат"])
