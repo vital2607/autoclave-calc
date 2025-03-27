@@ -75,9 +75,9 @@ def main():
         Au_base = st.slider("Au осн. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1, key="slider_Au_base")
         st.number_input("Au осн. (г/т)", min_value=0.0, max_value=200.0, value=Au_base, step=0.1, key="input_Au_base")
         S_base = st.slider("S осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_S_base")
-st.number_input("S осн. (%)", min_value=0.0, max_value=100.0, value=S_base, step=0.01, key="input_S_base")
+        st.number_input("S осн. (%)", min_value=0.0, max_value=100.0, value=S_base, step=0.01, key="input_S_base")
         As_base = st.slider("As осн. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01, key="slider_As_base")
-st.number_input("As осн. (%)", min_value=0.0, max_value=100.0, value=As_base, step=0.01, key="input_As_base")
+        st.number_input("As осн. (%)", min_value=0.0, max_value=100.0, value=As_base, step=0.01, key="input_As_base")
         Seq_base = st.slider("Seq осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_base")
         st.number_input("Seq осн. (%)", min_value=0.0, max_value=100.0, value=Seq_base, step=0.01, key="input_Seq_base", help="Если не задан — будет рассчитан автоматически")
 
@@ -93,9 +93,9 @@ st.number_input("As осн. (%)", min_value=0.0, max_value=100.0, value=As_base,
             Au_ext = st.slider("Au сторон. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1, key="slider_Au_ext")
             st.number_input("Au сторон. (г/т)", min_value=0.0, max_value=200.0, value=Au_ext, step=0.1, key="input_Au_ext")
             S_ext = st.slider("S сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_S_ext")
-st.number_input("S сторон. (%)", min_value=0.0, max_value=100.0, value=S_ext, step=0.01, key="input_S_ext")
+            st.number_input("S сторон. (%)", min_value=0.0, max_value=100.0, value=S_ext, step=0.01, key="input_S_ext")
             As_ext = st.slider("As сторон. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01, key="slider_As_ext")
-st.number_input("As сторон. (%)", min_value=0.0, max_value=100.0, value=As_ext, step=0.01, key="input_As_ext")
+            st.number_input("As сторон. (%)", min_value=0.0, max_value=100.0, value=As_ext, step=0.01, key="input_As_ext")
             Seq_ext = st.slider("Seq сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_ext")
             st.number_input("Seq сторон. (%)", min_value=0.0, max_value=50.0, value=Seq_ext, step=0.01, key="input_Seq_ext")
         else:
