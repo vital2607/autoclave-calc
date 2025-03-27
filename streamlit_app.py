@@ -56,7 +56,7 @@ def format_value(key, value):
     elif key.endswith("_t"):
         return UNIT_FORMATS["т"](value)
     elif key.endswith("g_t"):
-        return UNIT_FORMATS["г/т"](value)
+        return f"{value:.2f}"
     elif key.endswith("_kg"):
         return UNIT_FORMATS["кг"](value)
     elif key.endswith("_used"):
@@ -121,6 +121,11 @@ def main():
         if Seq_base == 0:
             st.warning("Серный эквивалент = 0. Расчёт невозможен. Укажите S и As или Seq вручную.")
             return
+
+        Seq_base_calc = calculate_missing_seq_param(S_base, As_base, None, k)
+        if Seq_base == 0 and (S_base > 0 or As_base > 0):
+            Seq_base = Seq_base_calc
+            st.info(f"Рассчитан серный эквивалент: {Seq_base:.2f}%")
 
         results = calc_fc_autoclave(
             name_base=name_base, Au_base=Au_base, S_base=S_base, As_base=As_base, Seq_base=Seq_base,
