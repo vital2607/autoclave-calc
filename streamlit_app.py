@@ -1,7 +1,7 @@
 # streamlit_app.py
 import streamlit as st
 import pandas as pd
-from fc_autoclave_calc import calc_fc_autoclave
+from fc_autoclave_calc import calc_fc_autoclave, calculate_missing_seq_param
 import io
 
 LABELS = {
@@ -35,11 +35,11 @@ LABELS = {
 TEMPLATES = {
     "ФК Маломыр": {
         "As_target": 3.0, "k": 0.371, "work_hours_year": 7500, "seq_productivity_per_hour": 4.07,
-        "S_base": 21.24, "As_base": 3.82, "Seq_base": 0.0  # S и As заданы, Seq = авто, Au не подставлять
+        "S_base": 21.24, "As_base": 3.82, "Seq_base": 0.0
     },
     "ФК Пионер": {
         "As_target": 2.5, "k": 0.35, "work_hours_year": 7200, "seq_productivity_per_hour": 3.8,
-        "S_base": 0.0, "As_base": 0.8, "Seq_base": 30.7  # As и Seq заданы, S = авто, Au не подставлять
+        "S_base": 0.0, "As_base": 0.8, "Seq_base": 30.7
     }
 }
 
@@ -68,8 +68,8 @@ def main():
     st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
     st.title("Расчёт флотоконцентрата и автоклавов")
 
-    st.subheader("Шаблон параметров")
-    selected_template = st.selectbox("Выберите шаблон:", list(TEMPLATES.keys()), index=0)
+    selected_template = "Концентрат 1"
+    template = {}), index=0)
     template = TEMPLATES[selected_template]
 
     mode = st.radio("Режим расчёта", ["1 – Два концентрата", "2 – Один концентрат"])
@@ -84,8 +84,8 @@ def main():
         Seq_base = st.number_input("Seq осн. (%)", min_value=0.0, value=template.get("Seq_base", 0.0))
 
         st.subheader("Параметры автоклава")
-        work_hours_year = st.number_input("Рабочих часов в году", value=template["work_hours_year"])
-        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=template["seq_productivity_per_hour"])
+        work_hours_year = st.number_input("Рабочих часов в году", value=7500)
+        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=4.07)
 
         if mode_val == 1:
             st.subheader("Стороннее сырьё")
@@ -98,8 +98,8 @@ def main():
             name_ext, Au_ext, S_ext, As_ext, Seq_ext = None, None, None, None, None
 
         st.subheader("Целевые параметры")
-        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=template["As_target"])
-        k = st.number_input("Коэффициент k", value=template["k"])
+        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=3.0)
+        k = st.number_input("Коэффициент k", value=0.371)
         Q_base = st.number_input("Q осн. (т/год) [опц.]", value=0.0)
         Q_ext = st.number_input("Q сторон. (т/год) [опц.]", value=0.0)
         yield_after_cond = st.number_input("Выход после кондиционирования (%)", value=100.0)
@@ -109,6 +109,15 @@ def main():
     if submitted:
         Q_base = Q_base if Q_base > 0 else None
         Q_ext = Q_ext if Q_ext > 0 else None
+
+        # авторасчёт серного эквивалента если он = 0
+        if Seq_base == 0 and (S_base > 0 or As_base > 0):
+            Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
+            st.info(f"Рассчитан серный эквивалент: {Seq_base:.2f}%")
+
+        if Seq_base == 0:
+            st.warning("Серный эквивалент = 0. Расчёт невозможен. Укажите S и As или Seq вручную.")
+            return
 
         results = calc_fc_autoclave(
             name_base=name_base, Au_base=Au_base, S_base=S_base, As_base=As_base, Seq_base=Seq_base,
@@ -120,10 +129,21 @@ def main():
 
         st.success("Расчёт завершён")
         data = []
-        for key, value in results.items():
-            label = LABELS.get(key, key)
-            formatted = format_value(key, value)
-            data.append({"Показатель": label, "Значение": formatted})
+        for key in [
+            "S_base_%", "As_base_%", "Seq_base_%", "Au_base",
+            "S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext",
+            "As_target", "k", "yield_after_cond",
+            "Total_capacity_t", "Max_Q_base_t", "Max_Q_ext_t", "Max_total_Q_t",
+            "Q_base_t", "Q_ext_required_t", "Mix_total_Q_t",
+            "Mix_As_%", "Mix_Seq_%", "Total_Seq_mass_t", "Autoclaves_used",
+            "Mix_Au_g_t", "Total_Au_kg", "Mass_kek_fk_t"
+        ]:
+            if key in results:
+                value = results[key]
+                formatted = format_value(key, value)
+                if str(formatted).strip() not in ('0', '0.0', '0.00'):
+                    label = LABELS.get(key, key)
+                    data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
         st.dataframe(df)
