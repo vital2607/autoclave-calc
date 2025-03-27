@@ -32,14 +32,28 @@ LABELS = {
     "Mass_kek_fk_t": "КЕК ФК (т)"
 }
 
+TEMPLATES = {
+    "ФК Маломыр": {
+        "As_target": 3.0, "k": 0.371, "work_hours_year": 7500, "seq_productivity_per_hour": 4.07,
+        "Au_base": 1.2, "S_base": 35.0, "As_base": 2.5, "Seq_base": 36.0,
+        "Au_ext": 0.9, "S_ext": 30.0, "As_ext": 5.0, "Seq_ext": 31.9
+    },
+    "ФК Пионер": {
+        "As_target": 2.5, "k": 0.35, "work_hours_year": 7200, "seq_productivity_per_hour": 3.8,
+        "Au_base": 1.1, "S_base": 32.0, "As_base": 2.2, "Seq_base": 32.8,
+        "Au_ext": 0.8, "S_ext": 27.0, "As_ext": 4.0, "Seq_ext": 28.4
+    },
+    "ФК Стороний": {
+        "As_target": 3.2, "k": 0.4, "work_hours_year": 8000, "seq_productivity_per_hour": 5.0,
+        "Au_base": 1.0, "S_base": 33.0, "As_base": 2.8, "Seq_base": 34.0,
+        "Au_ext": 0.7, "S_ext": 25.0, "As_ext": 4.5, "Seq_ext": 26.7
+    }
+}
+
 # Форматирование чисел
 UNIT_FORMATS = {
-    "т": lambda x: f"{x:.0f}",
-    "%": lambda x: f"{x:.2f}",
-    "г/т": lambda x: f"{x:.2f}",
-    "шт": lambda x: f"{x:.0f}",
-    "кг": lambda x: f"{x:.0f}",
-    "": lambda x: f"{x:.3f}"  # по умолчанию
+    "т": lambda x: f"{x:.0f}", "%": lambda x: f"{x:.2f}", "г/т": lambda x: f"{x:.2f}",
+    "шт": lambda x: f"{x:.0f}", "кг": lambda x: f"{x:.0f}", "": lambda x: f"{x:.3f}"
 }
 
 def format_value(key, value):
@@ -62,34 +76,38 @@ def main():
     st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
     st.title("Расчёт флотоконцентрата и автоклавов")
 
+    st.subheader("Шаблон параметров")
+    selected_template = st.selectbox("Выберите шаблон:", list(TEMPLATES.keys()), index=0)
+    template = TEMPLATES[selected_template]
+
     mode = st.radio("Режим расчёта", ["1 – Два концентрата", "2 – Один концентрат"])
     mode_val = 1 if mode.startswith("1") else 2
 
     with st.form("input_form"):
         st.subheader("Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", "Концентрат 1")
-        Au_base = st.number_input("Au осн. (г/т)", min_value=0.0)
-        S_base = st.number_input("S осн. (%)", min_value=0.0)
-        As_base = st.number_input("As осн. (%)", min_value=0.0)
-        Seq_base = st.number_input("Seq осн. (%)", min_value=0.0)
+        Au_base = st.number_input("Au осн. (г/т)", min_value=0.0, value=template["Au_base"])
+        S_base = st.number_input("S осн. (%)", min_value=0.0, value=template["S_base"])
+        As_base = st.number_input("As осн. (%)", min_value=0.0, value=template["As_base"])
+        Seq_base = st.number_input("Seq осн. (%)", min_value=0.0, value=template["Seq_base"])
 
         st.subheader("Параметры автоклава")
-        work_hours_year = st.number_input("Рабочих часов в году", value=7500)
-        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=4.07)
+        work_hours_year = st.number_input("Рабочих часов в году", value=template["work_hours_year"])
+        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=template["seq_productivity_per_hour"])
 
         if mode_val == 1:
             st.subheader("Стороннее сырьё")
             name_ext = st.text_input("Имя стороннего концентрата", "Концентрат 2")
-            Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
-            S_ext = st.number_input("S сторон. (%)", min_value=0.0)
-            As_ext = st.number_input("As сторон. (%)", min_value=0.0)
-            Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
+            Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0, value=template["Au_ext"])
+            S_ext = st.number_input("S сторон. (%)", min_value=0.0, value=template["S_ext"])
+            As_ext = st.number_input("As сторон. (%)", min_value=0.0, value=template["As_ext"])
+            Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0, value=template["Seq_ext"])
         else:
             name_ext, Au_ext, S_ext, As_ext, Seq_ext = None, None, None, None, None
 
         st.subheader("Целевые параметры")
-        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=3.0)
-        k = st.number_input("Коэффициент k", value=0.371)
+        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=template["As_target"])
+        k = st.number_input("Коэффициент k", value=template["k"])
         Q_base = st.number_input("Q осн. (т/год) [опц.]", value=0.0)
         Q_ext = st.number_input("Q сторон. (т/год) [опц.]", value=0.0)
         yield_after_cond = st.number_input("Выход после кондиционирования (%)", value=100.0)
@@ -116,9 +134,8 @@ def main():
             data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
-        st.dataframe(df.sort_values(by="Показатель"))
+        st.dataframe(df)
 
-        # Сохраняем как XLSX с цветовой заливкой
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
             df.to_excel(writer, index=False, sheet_name="autoclave")
