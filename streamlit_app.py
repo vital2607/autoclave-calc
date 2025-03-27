@@ -60,8 +60,40 @@ def main():
     if reset:
         st.experimental_rerun()
 
-st.title("Расчёт флотоконцентрата и автоклавов")
+    st.title("Расчёт флотоконцентрата и автоклавов")
     with st.form("input_form"):
+        st.subheader("Исходное сырьё")
+        name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
+        Au_base = st.number_input("Au осн. (г/т)", min_value=0.0)
+        S_base = st.number_input("S осн. (%)", min_value=0.0, value=0.0)
+        As_base = st.number_input("As осн. (%)", min_value=0.0, value=0.0)
+        Seq_base = st.number_input("Seq осн. (%)", min_value=0.0, value=0.0)
+
+        st.subheader("Параметры автоклава")
+        work_hours_year = st.number_input("Рабочих часов в году", value=7500)
+        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=4.07)
+
+        if mode_val == 1:
+            st.subheader("Стороннее сырьё")
+            name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
+            Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
+            S_ext = st.number_input("S сторон. (%)", min_value=0.0)
+            As_ext = st.number_input("As сторон. (%)", min_value=0.0)
+            Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
+        else:
+            name_ext = ""
+            Au_ext = 0.0
+            S_ext = 0.0
+            As_ext = 0.0
+            Seq_ext = 0.0
+
+        st.subheader("Целевые параметры")
+        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=3.0)
+        k = st.number_input("Коэффициент k", value=0.371)
+        Q_base = st.number_input("Q осн. (т/год) [опц.]", value=140000.0)
+        Q_ext = st.number_input("Q сторон. (т/год) [опц.]", value=38500.0)
+        yield_after_cond = st.number_input("Выход после кондиционирования (%)", value=70.4)
+
         submitted = st.form_submit_button("Рассчитать")
 
     if submitted:
