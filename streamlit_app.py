@@ -77,7 +77,7 @@ def main():
 
     with st.form("input_form"):
         st.subheader("Исходное сырьё")
-        name_base = st.text_input("Имя исходного концентрата", "Концентрат 1")
+        name_base = st.text_input("Имя исходного концентрата", value=selected_template)
         Au_base = st.number_input("Au осн. (г/т)", min_value=0.0)
         S_base = st.number_input("S осн. (%)", min_value=0.0, value=template.get("S_base", 0.0))
         As_base = st.number_input("As осн. (%)", min_value=0.0, value=template.get("As_base", 0.0))
