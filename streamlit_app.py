@@ -3,6 +3,35 @@ import streamlit as st
 import pandas as pd
 from fc_autoclave_calc import calc_fc_autoclave
 
+# Расшифровка переменных
+LABELS = {
+    "S_base_%": "Сера в осн. (%)",
+    "As_base_%": "Мышьяк в осн. (%)",
+    "Seq_base_%": "Серный эквивалент осн. (%)",
+    "Au_base": "Золото в осн. (г/т)",
+    "S_ext_%": "Сера в сторон. (%)",
+    "As_ext_%": "Мышьяк в сторон. (%)",
+    "Seq_ext_%": "Серный эквивалент сторон. (%)",
+    "Au_ext": "Золото в сторон. (г/т)",
+    "As_target": "Целевой As (%)",
+    "k": "Коэффициент k",
+    "yield_after_cond": "Выход после кондиционирования (%)",
+    "Total_capacity_t": "Общая годовая мощность (т)",
+    "Max_Q_base_t": "Макс. масса осн. сырья (т)",
+    "Max_Q_ext_t": "Макс. масса сторон. сырья (т)",
+    "Max_total_Q_t": "Макс. общий объём сырья (т)",
+    "Q_base_t": "Факт. масса осн. сырья (т)",
+    "Q_ext_required_t": "Факт. масса сторон. сырья (т)",
+    "Mix_total_Q_t": "Фактич. общая смесь (т)",
+    "Mix_As_%": "Итоговый As в смеси (%)",
+    "Mix_Seq_%": "Итоговый Seq в смеси (%)",
+    "Total_Seq_mass_t": "Сумма серного эквивалента (т)",
+    "Autoclaves_used": "Нужно автоклавов (шт)",
+    "Mix_Au_g_t": "Золото в смеси (г/т)",
+    "Total_Au_kg": "Всего золота (кг)",
+    "Mass_kek_fk_t": "КЕК ФК (т)"
+}
+
 def main():
     st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
     st.title("Расчёт флотоконцентрата и автоклавов")
@@ -54,10 +83,15 @@ def main():
         )
 
         st.success("Расчёт завершён")
-        df = pd.DataFrame([results])
-        st.dataframe(df.T.rename(columns={0: "Значение"}))
+        data = []
+        for key, value in results.items():
+            label = LABELS.get(key, key)
+            data.append({"Показатель": label, "Значение": value})
 
-        csv = df.T.rename(columns={0: "Значение"}).to_csv().encode('utf-8')
+        df = pd.DataFrame(data)
+        st.dataframe(df)
+
+        csv = df.to_csv(index=False).encode('utf-8')
         st.download_button("Скачать как CSV", data=csv, file_name="autoclave_result.csv", mime="text/csv")
 
 if __name__ == '__main__':
