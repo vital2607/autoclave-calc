@@ -79,7 +79,7 @@ def main():
             st.experimental_rerun()
 
         if mode_val == 1:
-        st.subheader("Стороннее сырьё")
+            st.subheader("Стороннее сырьё")
         name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
         Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
         S_ext = st.number_input("S сторон. (%)", min_value=0.0)
