@@ -45,7 +45,7 @@ def format_value(key, value):
     elif key.endswith("_t"):
         return UNIT_FORMATS["т"](value)
     elif key.endswith("g_t"):
-        return UNIT_FORMATS["г/т"](value)
+        return f"{value:.2f}"
     elif key.endswith("_kg"):
         return UNIT_FORMATS["кг"](value)
     elif key.endswith("_used"):
@@ -69,19 +69,40 @@ def main():
         work_hours_year = st.number_input("Рабочих часов в году", value=7500)
         seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=4.07)
 
+        
+
+        
+
+        mode_val = st.radio("Режим расчёта:", options=[1, 2], format_func=lambda x: "1 – Два концентрата" if x == 1 else "2 – Один концентрат")
+        reset = st.form_submit_button("Сбросить значения")
+        if reset:
+            st.experimental_rerun()
+
+        if mode_val == 1:
         st.subheader("Стороннее сырьё")
         name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
         Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
         S_ext = st.number_input("S сторон. (%)", min_value=0.0)
         As_ext = st.number_input("As сторон. (%)", min_value=0.0)
         Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
+    else:
+        name_ext = ""
+        Au_ext = 0.0
+        S_ext = 0.0
+        As_ext = 0.0
+        Seq_ext = 0.0
 
-        st.subheader("Целевые параметры")
+    
         As_target = st.number_input("Целевой As (%)", min_value=0.0, value=3.0)
         k = st.number_input("Коэффициент k", value=0.371)
         Q_base = st.number_input("Q осн. (т/год) [опц.]", value=140000.0)
         Q_ext = st.number_input("Q сторон. (т/год) [опц.]", value=38500.0)
         yield_after_cond = st.number_input("Выход после кондиционирования (%)", value=70.4)
+
+        mode_val = st.radio("Режим расчёта:", options=[1, 2], format_func=lambda x: "1 – Два концентрата" if x == 1 else "2 – Один концентрат")
+        reset = st.form_submit_button("Сбросить значения")
+        if reset:
+            st.experimental_rerun()
 
         submitted = st.form_submit_button("Рассчитать")
 
@@ -102,13 +123,15 @@ def main():
             work_hours_year=work_hours_year, seq_productivity_per_hour=seq_productivity_per_hour,
             name_ext=name_ext, Au_ext=Au_ext, S_ext=S_ext, As_ext=As_ext, Seq_ext=Seq_ext,
             As_target=As_target, k=k, Q_base=Q_base, Q_ext=Q_ext,
-            yield_after_cond=yield_after_cond, mode=1
+            yield_after_cond=yield_after_cond, mode=mode_val
         )
 
         st.success("Расчёт завершён")
         data = []
         for key in LABELS:
             if key in results:
+                if mode_val == 2 and key in ["S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"]:
+                    continue  # пропуск стороннего сырья в режиме 2
                 value = results[key]
                 formatted = format_value(key, value)
                 label = LABELS[key]
@@ -120,12 +143,22 @@ def main():
 
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
-            df.to_excel(writer, index=False, sheet_name="autoclave")
+            df_export = df.copy()
+            if mode_val == 2:
+                df_export = df_export[~df_export["Показатель"].isin([
+                    "Сера в сторон. (%)", "Мышьяк в сторон. (%)", "Серный эквивалент сторон. (%)", "Золото в сторон. (г/т)",
+                    "Макс. масса сторон. сырья (т)", "Факт. масса сторон. сырья (т)"
+                ])]
+            worksheet_name = "autoclave"
+            worksheet_title = f"Результаты расчёта ({'2 – Один концентрат' if mode_val == 2 else '1 – Два концентрата'})"
+            df_export.to_excel(writer, index=False, sheet_name=worksheet_name, startrow=2)
+            worksheet = writer.sheets[worksheet_name]
+            worksheet.write("A1", worksheet_title)
             workbook = writer.book
             worksheet = writer.sheets["autoclave"]
             format1 = workbook.add_format({"bg_color": "#DDEBF7"})
             format2 = workbook.add_format({"bg_color": "#FCE4D6"})
-            for row in range(1, len(df) + 1):
+            for row in range(1, len(df_export) + 1):
                 fmt = format1 if row % 2 == 0 else format2
                 worksheet.set_row(row, None, fmt)
 
