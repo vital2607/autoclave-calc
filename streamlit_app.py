@@ -91,25 +91,13 @@ def main():
             st.markdown("### 🟥 Стороннее сырьё")
             name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
             col_au_ext1, col_au_ext2 = st.columns([3, 1])
-            with col_au_ext1:
-                Au_ext = st.slider("Au сторон. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1, key="slider_Au_ext")
-            with col_au_ext2:
-                Au_ext = st.number_input(" ", min_value=0.0, max_value=200.0, value=Au_ext, step=0.1, key="input_Au_ext")
+            Au_ext = st.number_input("Золото в сторон. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1)" ", min_value=0.0, max_value=200.0, value=Au_ext, step=0.1, key="input_Au_ext")
             col_se1, col_se2 = st.columns([3, 1])
-            with col_se1:
-                S_ext = st.slider("S сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_S_ext")
-            with col_se2:
-                S_ext = st.number_input(" ", min_value=0.0, max_value=100.0, value=S_ext, step=0.01, key="input_S_ext")
+            S_ext = st.number_input("Сера в сторон. (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.01)" ", min_value=0.0, max_value=100.0, value=S_ext, step=0.01, key="input_S_ext")
             col_ae1, col_ae2 = st.columns([3, 1])
-            with col_ae1:
-                As_ext = st.slider("As сторон. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01, key="slider_As_ext")
-            with col_ae2:
-                As_ext = st.number_input(" ", min_value=0.0, max_value=100.0, value=As_ext, step=0.01, key="input_As_ext")
+            As_ext = st.number_input("Мышьяк в сторон. (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.01)" ", min_value=0.0, max_value=100.0, value=As_ext, step=0.01, key="input_As_ext")
             col_seqe1, col_seqe2 = st.columns([3, 1])
-            with col_seqe1:
-                Seq_ext = st.slider("Seq сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_ext")
-            with col_seqe2:
-                Seq_ext = st.number_input(" ", min_value=0.0, max_value=50.0, value=Seq_ext, step=0.01, key="input_Seq_ext")
+            Seq_ext = st.number_input("Серный эквивалент сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01)" ", min_value=0.0, max_value=50.0, value=Seq_ext, step=0.01, key="input_Seq_ext")
         else:
             name_ext = ""
             Au_ext = 0.0
