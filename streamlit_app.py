@@ -55,9 +55,13 @@ def format_value(key, value):
 
 def main():
     st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
-    st.title("Расчёт флотоконцентрата и автоклавов")
+    mode_val = st.radio("Режим расчёта:", options=[1, 2], format_func=lambda x: "1 – Два концентрата" if x == 1 else "2 – Один концентрат")
+    reset = st.button("Сбросить значения")
+    if reset:
+        st.experimental_rerun()
 
-    
+st.title("Расчёт флотоконцентрата и автоклавов")
+    with st.form("input_form"):
         submitted = st.form_submit_button("Рассчитать")
 
     if submitted:
