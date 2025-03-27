@@ -53,6 +53,7 @@ def format_value(key, value):
     else:
         return UNIT_FORMATS[""](value)
 
+st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
 def main():
     ACCESS_CODE = "23101981"  # ← установи здесь свой код доступа
 
@@ -61,7 +62,7 @@ def main():
     if code != ACCESS_CODE:
         st.warning("❌ Неверный код. Попробуйте снова")
         st.stop()
-    st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
+    
     mode_val = st.radio("Режим расчёта:", options=[1, 2], format_func=lambda x: "1 – Два концентрата" if x == 1 else "2 – Один концентрат")
     reset = st.button("Сбросить значения")
     if reset:
