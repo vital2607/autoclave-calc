@@ -72,22 +72,32 @@ def main():
     with st.form("input_form"):
         st.subheader("Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
-        Au_base = st.number_input("Au осн. (г/т)", min_value=0.0)
-        S_base = st.slider("S осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01)
-        As_base = st.slider("As осн. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01)
-        Seq_base = st.number_input("Seq осн. (%)", min_value=0.0, value=0.0, step=0.01, help="Если не задан — будет рассчитан автоматически")
+        Au_base = st.slider("Au осн. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1, key="slider_Au_base")
+        st.number_input("Au осн. (г/т)", min_value=0.0, max_value=200.0, value=Au_base, step=0.1, key="input_Au_base")
+        S_base = st.slider("S осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_S_base")
+st.number_input("S осн. (%)", min_value=0.0, max_value=100.0, value=S_base, step=0.01, key="input_S_base")
+        As_base = st.slider("As осн. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01, key="slider_As_base")
+st.number_input("As осн. (%)", min_value=0.0, max_value=100.0, value=As_base, step=0.01, key="input_As_base")
+        Seq_base = st.slider("Seq осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_base")
+        st.number_input("Seq осн. (%)", min_value=0.0, max_value=100.0, value=Seq_base, step=0.01, key="input_Seq_base", help="Если не задан — будет рассчитан автоматически")
 
         st.subheader("Параметры автоклава")
-        work_hours_year = st.number_input("Рабочих часов в году", value=7500)
-        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", value=4.07)
+        work_hours_year = st.slider("Рабочих часов в году", min_value=1000, max_value=9000, value=7500, step=100, key="slider_hours")
+        st.number_input("Рабочих часов в году", min_value=0, max_value=9000, value=work_hours_year, step=100, key="input_hours")
+        seq_productivity_per_hour = st.slider("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=4.07, step=0.01, key="slider_prod")
+        st.number_input("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=seq_productivity_per_hour, step=0.01, key="input_prod")
 
         if mode_val == 1:
             st.subheader("Стороннее сырьё")
             name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
-            Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
-            S_ext = st.slider("S сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01)
-            As_ext = st.slider("As сторон. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01)
-            Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
+            Au_ext = st.slider("Au сторон. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1, key="slider_Au_ext")
+            st.number_input("Au сторон. (г/т)", min_value=0.0, max_value=200.0, value=Au_ext, step=0.1, key="input_Au_ext")
+            S_ext = st.slider("S сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_S_ext")
+st.number_input("S сторон. (%)", min_value=0.0, max_value=100.0, value=S_ext, step=0.01, key="input_S_ext")
+            As_ext = st.slider("As сторон. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01, key="slider_As_ext")
+st.number_input("As сторон. (%)", min_value=0.0, max_value=100.0, value=As_ext, step=0.01, key="input_As_ext")
+            Seq_ext = st.slider("Seq сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_ext")
+            st.number_input("Seq сторон. (%)", min_value=0.0, max_value=50.0, value=Seq_ext, step=0.01, key="input_Seq_ext")
         else:
             name_ext = ""
             Au_ext = 0.0
@@ -96,11 +106,17 @@ def main():
             Seq_ext = 0.0
 
         st.subheader("Целевые параметры")
-        As_target = st.number_input("Целевой As (%)", min_value=0.0, value=3.0)
-        k = st.number_input("Коэффициент k", value=0.371)
-        Q_base = st.number_input("Q осн. (т/год) [опц.]", value=140000.0)
-        Q_ext = st.number_input("Q сторон. (т/год) [опц.]", value=38500.0)
-        yield_after_cond = st.number_input("Выход после кондиционирования (%)", value=70.4)
+        As_target = st.slider("Целевой As (%)", min_value=0.0, max_value=10.0, value=3.0, step=0.01, key="slider_As_target")
+        st.number_input("Целевой As (%)", min_value=0.0, max_value=10.0, value=As_target, step=0.01, key="input_As_target")
+        k = st.slider("Коэффициент k", min_value=0.0, max_value=1.0, value=0.371, step=0.001, key="slider_k")
+        st.number_input("Коэффициент k", min_value=0.0, max_value=1.0, value=k, step=0.001, key="input_k")
+        st.number_input("Коэффициент k", min_value=0.0, max_value=1.0, value=k, step=0.001, key="input_k")
+        Q_base = st.slider("Q осн. (т/год)", min_value=0.0, max_value=500000.0, value=140000.0, step=1000.0, key="slider_Q_base")
+        st.number_input("Q осн. (т/год) [опц.]", min_value=0.0, max_value=500000.0, value=Q_base, step=1000.0, key="input_Q_base")
+        Q_ext = st.slider("Q сторон. (т/год)", min_value=0.0, max_value=500000.0, value=38500.0, step=1000.0, key="slider_Q_ext")
+        st.number_input("Q сторон. (т/год) [опц.]", min_value=0.0, max_value=500000.0, value=Q_ext, step=1000.0, key="input_Q_ext")
+        yield_after_cond = st.slider("Выход после кондиционирования (%)", min_value=0.0, max_value=100.0, value=70.4, step=0.1, key="slider_yield")
+        st.number_input("Выход после кондиционирования (%)", min_value=0.0, max_value=100.0, value=yield_after_cond, step=0.1, key="input_yield")
 
         submitted = st.form_submit_button("Рассчитать")
 
