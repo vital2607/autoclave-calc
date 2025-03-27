@@ -54,6 +54,13 @@ def format_value(key, value):
         return UNIT_FORMATS[""](value)
 
 def main():
+    ACCESS_CODE = "23101981"  # ← установи здесь свой код доступа
+
+
+    code = st.text_input("Введите код доступа", type="password")
+    if code != ACCESS_CODE:
+        st.warning("❌ Неверный код. Попробуйте снова")
+        st.stop()
     st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
     mode_val = st.radio("Режим расчёта:", options=[1, 2], format_func=lambda x: "1 – Два концентрата" if x == 1 else "2 – Один концентрат")
     reset = st.button("Сбросить значения")
@@ -65,9 +72,9 @@ def main():
         st.subheader("Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
         Au_base = st.number_input("Au осн. (г/т)", min_value=0.0)
-        S_base = st.number_input("S осн. (%)", min_value=0.0, value=0.0)
-        As_base = st.number_input("As осн. (%)", min_value=0.0, value=0.0)
-        Seq_base = st.number_input("Seq осн. (%)", min_value=0.0, value=0.0)
+        S_base = st.slider("S осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01)
+        As_base = st.slider("As осн. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01)
+        Seq_base = st.number_input("Seq осн. (%)", min_value=0.0, value=0.0, step=0.01, help="Если не задан — будет рассчитан автоматически")
 
         st.subheader("Параметры автоклава")
         work_hours_year = st.number_input("Рабочих часов в году", value=7500)
@@ -77,8 +84,8 @@ def main():
             st.subheader("Стороннее сырьё")
             name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
             Au_ext = st.number_input("Au сторон. (г/т)", min_value=0.0)
-            S_ext = st.number_input("S сторон. (%)", min_value=0.0)
-            As_ext = st.number_input("As сторон. (%)", min_value=0.0)
+            S_ext = st.slider("S сторон. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01)
+            As_ext = st.slider("As сторон. (%)", min_value=0.0, max_value=10.0, value=0.0, step=0.01)
             Seq_ext = st.number_input("Seq сторон. (%)", min_value=0.0)
         else:
             name_ext = ""
@@ -96,8 +103,9 @@ def main():
 
         submitted = st.form_submit_button("Рассчитать")
 
-    if submitted:
-        Q_base = Q_base if Q_base > 0 else None
+    with st.spinner("Выполняется расчёт..."):
+        if submitted:
+            Q_base = Q_base if Q_base > 0 else None
         Q_ext = Q_ext if Q_ext > 0 else None
 
         if Seq_base == 0 and (S_base > 0 or As_base > 0):
