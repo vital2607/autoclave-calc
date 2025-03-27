@@ -72,35 +72,23 @@ def main():
     with st.form("input_form"):
         st.markdown("### 🟦 Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
-        col_au1, col_au2 = st.columns([3, 1])
-        with col_au2:
-            Au_base = st.number_input(" ", min_value=0.0, max_value=200.0, value=Au_base, step=0.1, key="input_Au_base")
-        col_sb1, col_sb2 = st.columns([3, 1])
-        with col_sb2:
-            S_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=S_base, step=0.01, key="input_S_base")
-        col_ab1, col_ab2 = st.columns([3, 1])
-        with col_ab2:
-            As_base = st.number_input(" ", min_value=0.0, max_value=30.0, value=As_base_val, step=0.01, key="input_As_base")
-        col_sbseq1, col_sbseq2 = st.columns([3, 1])
-        with col_sbseq2:
-            Seq_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=Seq_base, step=0.01, key="input_Seq_base", help="Если не задан — будет рассчитан автоматически")
+        Au_base = st.number_input("Золото в осн. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1)
+        S_base = st.number_input("Сера в осн. (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.01)
+        As_base = st.number_input("Мышьяк в осн. (%)", min_value=0.0, max_value=30.0, value=0.0, step=0.01)
+        Seq_base = st.number_input("Серный эквивалент осн. (%)", min_value=0.0, max_value=100.0, value=0.0, step=0.01, help="Если не задан — будет рассчитан автоматически")
 
         st.markdown("---")
-st.markdown("### ⚙️ Параметры автоклава")
+        st.markdown("### ⚙️ Параметры автоклава")
         col_hours1, col_hours2 = st.columns([3, 1])
-        with col_hours1:
-            col_hours1, col_hours2 = st.columns([3, 1])
         with col_hours2:
             work_hours_year = st.number_input(" ", min_value=1000, max_value=9000, value=work_hours_year_val, step=100, key="input_hours")
         col_prod1, col_prod2 = st.columns([3, 1])
-        with col_prod1:
-            col_prod1, col_prod2 = st.columns([3, 1])
         with col_prod2:
             seq_productivity_per_hour = st.number_input(" ", min_value=0.1, max_value=10.0, value=seq_productivity_per_hour_val, step=0.01, key="input_prod")
 
         if mode_val == 1:
             st.markdown("---")
-st.markdown("### 🟥 Стороннее сырьё")
+            st.markdown("### 🟥 Стороннее сырьё")
             name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
             col_au_ext1, col_au_ext2 = st.columns([3, 1])
             with col_au_ext1:
@@ -130,33 +118,12 @@ st.markdown("### 🟥 Стороннее сырьё")
             Seq_ext = 0.0
 
         st.markdown("---")
-st.markdown("### 🎯 Целевые параметры")
-        col_ast1, col_ast2 = st.columns([3, 1])
-        with col_ast1:
-            As_target = st.slider("Целевой As (%)", min_value=0.0, max_value=10.0, value=3.0, step=0.01, key="slider_As_target")
-        with col_ast2:
-            As_target = st.number_input(" ", min_value=0.0, max_value=10.0, value=As_target, step=0.01, key="input_As_target")
-        col_k1, col_k2 = st.columns([3, 1])
-        with col_k1:
-            k_val = st.slider("Коэффициент k", min_value=0.0, max_value=1.0, value=0.371, step=0.001, key="slider_k")
-        with col_k2:
-            k = st.number_input(" ", min_value=0.0, max_value=1.0, value=k_val, step=0.001, key="input_k2")
-        st.number_input("Коэффициент k", min_value=0.0, max_value=1.0, value=k, step=0.001, key="input_k")
-        col_qb1, col_qb2 = st.columns([3, 1])
-        with col_qb1:
-            Q_base = st.slider("Q осн. (т/год)", min_value=0.0, max_value=500000.0, value=140000.0, step=1000.0, key="slider_Q_base")
-        with col_qb2:
-            Q_base = st.number_input(" ", min_value=0.0, max_value=500000.0, value=Q_base, step=1000.0, key="input_Q_base")
-        col_qe1, col_qe2 = st.columns([3, 1])
-        with col_qe1:
-            Q_ext_val = st.slider("Q сторон. (т/год)", min_value=0.0, max_value=500000.0, value=38500.0, step=1000.0, key="slider_Q_ext")
-        with col_qe2:
-            Q_ext = st.number_input(" ", min_value=0.0, max_value=500000.0, value=Q_ext_val, step=1000.0, key="input_Q_ext")
-        col_y1, col_y2 = st.columns([3, 1])
-        with col_y1:
-            yield_after_cond = st.slider("Выход после кондиционирования (%)", min_value=0.0, max_value=100.0, value=70.4, step=0.1, key="slider_yield")
-        with col_y2:
-            yield_after_cond = st.number_input(" ", min_value=0.0, max_value=100.0, value=yield_after_cond, step=0.1, key="input_yield")
+        st.markdown("### 🎯 Целевые параметры")
+        As_target = st.number_input("Целевой As (%)", min_value=0.0, max_value=10.0, value=3.0, step=0.01)
+        k = st.number_input("Коэффициент k", min_value=0.0, max_value=1.0, value=0.371, step=0.001)
+        Q_base = st.number_input("Q осн. (т/год)", min_value=0.0, max_value=500000.0, value=140000.0, step=1000.0)
+        Q_ext = st.number_input("Q сторон. (т/год)", min_value=0.0, max_value=500000.0, value=38500.0, step=1000.0)
+        yield_after_cond = st.number_input("Выход после кондиционирования (%)", min_value=0.0, max_value=100.0, value=70.4, step=0.1)
 
         submitted = st.form_submit_button("Рассчитать")
 
