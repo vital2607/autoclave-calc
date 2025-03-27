@@ -70,47 +70,37 @@ def main():
 
     st.title("Расчёт флотоконцентрата и автоклавов")
     with st.form("input_form"):
-        st.subheader("Исходное сырьё")
+        st.markdown("### 🟦 Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
         col_au1, col_au2 = st.columns([3, 1])
-        with col_au1:
-            Au_base = st.slider("Au осн. (г/т)", min_value=0.0, max_value=200.0, value=0.0, step=0.1, key="slider_Au_base")
         with col_au2:
             Au_base = st.number_input(" ", min_value=0.0, max_value=200.0, value=Au_base, step=0.1, key="input_Au_base")
         col_sb1, col_sb2 = st.columns([3, 1])
-        with col_sb1:
-            S_base = st.slider("S осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_S_base")
         with col_sb2:
             S_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=S_base, step=0.01, key="input_S_base")
         col_ab1, col_ab2 = st.columns([3, 1])
-        with col_ab1:
-            As_base_val = st.slider("As осн. (%)", min_value=0.0, max_value=30.0, value=0.0, step=0.01, key="slider_As_base")
         with col_ab2:
             As_base = st.number_input(" ", min_value=0.0, max_value=30.0, value=As_base_val, step=0.01, key="input_As_base")
         col_sbseq1, col_sbseq2 = st.columns([3, 1])
-        with col_sbseq1:
-            Seq_base = st.slider("Seq осн. (%)", min_value=0.0, max_value=50.0, value=0.0, step=0.01, key="slider_Seq_base")
         with col_sbseq2:
             Seq_base = st.number_input(" ", min_value=0.0, max_value=100.0, value=Seq_base, step=0.01, key="input_Seq_base", help="Если не задан — будет рассчитан автоматически")
 
-        st.subheader("Параметры автоклава")
+        st.markdown("---")
+st.markdown("### ⚙️ Параметры автоклава")
         col_hours1, col_hours2 = st.columns([3, 1])
         with col_hours1:
             col_hours1, col_hours2 = st.columns([3, 1])
-        with col_hours1:
-            work_hours_year_val = st.slider("Рабочих часов в году", min_value=1000, max_value=9000, value=7500, step=100, key="slider_hours")
         with col_hours2:
             work_hours_year = st.number_input(" ", min_value=1000, max_value=9000, value=work_hours_year_val, step=100, key="input_hours")
         col_prod1, col_prod2 = st.columns([3, 1])
         with col_prod1:
             col_prod1, col_prod2 = st.columns([3, 1])
-        with col_prod1:
-            seq_productivity_per_hour_val = st.slider("Производительность автоклава (т/ч)", min_value=0.1, max_value=10.0, value=4.07, step=0.01, key="slider_prod")
         with col_prod2:
             seq_productivity_per_hour = st.number_input(" ", min_value=0.1, max_value=10.0, value=seq_productivity_per_hour_val, step=0.01, key="input_prod")
 
         if mode_val == 1:
-            st.subheader("Стороннее сырьё")
+            st.markdown("---")
+st.markdown("### 🟥 Стороннее сырьё")
             name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
             col_au_ext1, col_au_ext2 = st.columns([3, 1])
             with col_au_ext1:
@@ -139,7 +129,8 @@ def main():
             As_ext = 0.0
             Seq_ext = 0.0
 
-        st.subheader("Целевые параметры")
+        st.markdown("---")
+st.markdown("### 🎯 Целевые параметры")
         col_ast1, col_ast2 = st.columns([3, 1])
         with col_ast1:
             As_target = st.slider("Целевой As (%)", min_value=0.0, max_value=10.0, value=3.0, step=0.01, key="slider_As_target")
