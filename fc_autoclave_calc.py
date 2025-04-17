@@ -36,6 +36,7 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
                       As_target, k=1.0, Q_base=None, Q_ext=None,
                       yield_after_cond=100.0, mode=1):
     results = {}
+
     # Исходное сырье
     if Seq_base is None:
         Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
@@ -95,9 +96,13 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
 
     total_seq_mass = f_Seq_mix * mix_total_q
     num_autoclaves = total_seq_mass / seq_productivity_per_year if seq_productivity_per_year else 0.0
-    mass_kek_fk = mix_total_q * (yield_after_cond / 100.0)
-    Au_mix = ((Au_base or 0.0) * Q_base + (Au_ext or 0.0) * Q_ext_required) / mix_total_q if mix_total_q else 0.0
-    total_au_mass = Au_mix * mix_total_q / 1000
+
+    # ⬇️ Исправление расчёта золота после кондиционирования
+    mass_after_yield = mix_total_q * (yield_after_cond / 100.0)
+    Au_total_mass = ((Au_base or 0.0) * Q_base + (Au_ext or 0.0) * Q_ext_required)
+    Au_mix = Au_total_mass / mass_after_yield if mass_after_yield else 0.0
+    total_au_mass = Au_mix * mass_after_yield / 1000
+    mass_kek_fk = mass_after_yield
 
     results.update({
         'Max_Q_base_t': Q_base_max,
