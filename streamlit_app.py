@@ -136,7 +136,8 @@ def main():
             yield_after_cond=yield_after_cond, mode=mode_val
         )
         if 'Mix_Au_g_t' in results:
-    st.warning(f"🔍 DEBUG: Mix_Au_g_t (raw) = {results['Mix_Au_g_t']}")
+            st.warning(f"🔍 DEBUG: Mix_Au_g_t (raw) = {results['Mix_Au_g_t']}")
+
 
         st.success("Расчёт завершён")
         data = []
