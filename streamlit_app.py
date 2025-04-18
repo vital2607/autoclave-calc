@@ -150,7 +150,6 @@ def main():
                 formatted = format_value(key, value)
                 label = LABELS[key]
             data.append({"Показатель": label, "Значение": formatted})
-            data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
         st.dataframe(df)
