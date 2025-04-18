@@ -3,7 +3,10 @@ import pandas as pd
 from fc_autoclave_calc import calc_fc_autoclave, calculate_missing_seq_param
 import io
 
-# Названия показателей
+# Настройка страницы
+st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
+
+# Соответствие ключ→название для таблицы
 LABELS = {
     "S_base_%": "Сера в осн. (%)",
     "As_base_%": "Мышьяк в осн. (%)",
@@ -32,42 +35,34 @@ LABELS = {
     "Mass_kek_fk_t": "КЕК ФК (т)"
 }
 
-# Вспомогательные форматеры по единицам
+# Форматеры по единицам
 UNIT_FORMATS = {
-    "%": lambda x: f"{x:.2f}",
-    "т": lambda x: f"{x:.0f}",
+    "%":   lambda x: f"{x:.2f}",
+    "т":   lambda x: f"{x:.0f}",
     "г/т": lambda x: f"{x:.2f}",
-    "шт": lambda x: f"{x:.2f}",
-    "кг": lambda x: f"{x:.0f}",
-    "":   lambda x: f"{x:.3f}"
+    "шт":  lambda x: f"{x:.2f}",
+    "кг":  lambda x: f"{x:.0f}",
+    "":    lambda x: f"{x:.3f}"
 }
 
 def format_value(key, value):
-    """Возвращает строку с нужным количеством знаков и заменой точки на запятую для Mix_Au_g_t."""
+    """Возвращает строку с нужным количеством знаков.
+    Для Mix_Au_g_t — замена точки на запятую."""
     if value is None:
         return ""
-    # Mix_Au_g_t — два знака после запятой, запятая
     if key == "Mix_Au_g_t":
         return f"{value:.2f}".replace(".", ",")
-    # остальные проценты
-    if key.endswith("%") or "%" in key:
+    if "%" in key:
         return UNIT_FORMATS["%"](value)
-    # тонны
     if key.endswith("_t"):
         return UNIT_FORMATS["т"](value)
-    # золото в начале
     if key in ("Au_base", "Au_ext"):
         return f"{value:.2f}"
-    # килограммы
     if key.endswith("_kg"):
         return UNIT_FORMATS["кг"](value)
-    # штуки
     if key.endswith("_used"):
         return UNIT_FORMATS["шт"](value)
-    # по умолчанию три знака
     return UNIT_FORMATS[""](value)
-
-st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
 
 def main():
     ACCESS_CODE = "23101981"
@@ -86,18 +81,21 @@ def main():
 
     st.title("Расчёт флотоконцентрата и автоклавов")
     with st.form("input_form"):
+        # ⬇️ Исходное сырьё
         st.markdown("### 🟦 Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", "Концентрат 1")
         Au_base   = st.number_input("Золото в осн. (г/т)", 0.0, 200.0, 0.0, 0.1)
         S_base    = st.number_input("Сера в осн. (%)",   0.0, 100.0, 0.0, 0.01)
         As_base   = st.number_input("Мышьяк в осн. (%)",0.0,  30.0, 0.0, 0.01)
-        Seq_base  = st.number_input("Seq осн. (%)",      0.0, 100.0, 0.0, 0.01)
+        Seq_base  = st.number_input("Seq осн. (%)",     0.0, 100.0, 0.0, 0.01)
 
+        # ⬇️ Параметры автоклава
         st.markdown("---")
         st.markdown("### ⚙️ Параметры автоклава")
         work_hours_year           = st.number_input("Рабочих часов в году",               1000, 9000, 7500, 100)
         seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", 0.1, 10.0, 4.07, 0.01)
 
+        # ⬇️ Стороннее сырьё (только в режиме 1)
         if mode_val == 1:
             st.markdown("---")
             st.markdown("### 🟥 Стороннее сырьё")
@@ -110,6 +108,7 @@ def main():
             name_ext = ""
             Au_ext = S_ext = As_ext = Seq_ext = 0.0
 
+        # ⬇️ Целевые параметры
         st.markdown("---")
         st.markdown("### 🎯 Целевые параметры")
         As_target        = st.number_input("Целевой As (%)",                           0.0, 10.0, 3.0, 0.01)
@@ -117,14 +116,15 @@ def main():
         Q_base           = st.number_input("Q осн. (т/год)",                            0.0, 500_000.0, 140_000.0, 1_000.0)
         Q_ext            = st.number_input("Q сторон. (т/год)",                          0.0, 500_000.0,  38_500.0, 1_000.0)
         yield_after_cond = st.number_input("Выход после кондиционирования (%)",         0.0, 100.0, 70.4, 0.1)
-        submitted        = st.form_submit_button("Рассчитать")
+
+        submitted = st.form_submit_button("Рассчитать")
 
     if submitted:
-        # Нулевые → None
+        # Нули → None
         Q_base = None if Q_base == 0 else Q_base
         Q_ext  = None if Q_ext  == 0 else Q_ext
 
-        # Автоподсчёт Seq
+        # Авто‑Seq, если нужно
         if Seq_base == 0 and (S_base or As_base):
             Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
             st.info(f"Рассчитан серный эквивалент: {Seq_base:.2f}%")
@@ -141,25 +141,22 @@ def main():
         )
         st.success("Расчёт завершён")
 
-        # Собираем результаты
+        # Формируем вывод в таблицу
+        skip_ext = {
+            "S_ext_%", "As_ext_%", "Seq_ext_%",
+            "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"
+        }
         data = []
-        for key in LABELS:
+        for key, label in LABELS.items():
             if key not in results:
                 continue
-            # в режиме «один концентрат» пропускаем поля стороннего
-            if mode_val == 2 and key in [
-                "S_ext_%", "As_ext_%", "Seq_ext_%",
-                "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"
-            ]:
+            if mode_val == 2 and key in skip_ext:
                 continue
-            value = results[key]
-            formatted = format_value(key, value)
+            raw = results[key]
+            formatted = format_value(key, raw)
             if formatted.strip() in ("", "0", "0.0", "0.00"):
                 continue
-            data.append({
-                "Показатель": LABELS[key],
-                "Значение": formatted
-            })
+            data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
         st.dataframe(df)
