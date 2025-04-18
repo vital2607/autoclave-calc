@@ -1,7 +1,7 @@
 # streamlit_app.py — обновлено с акцентом на точный расчёт как в эталоне
 import streamlit as st
 import pandas as pd
-from fc_autoclave_calc import calc_fc_autoclave, calculate_missing_seq_param
+from fc_autoclave_calc_debug import calc_fc_autoclave, calculate_missing_seq_param
 import io
 
 LABELS = {
