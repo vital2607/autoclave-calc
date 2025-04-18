@@ -3,10 +3,8 @@ import pandas as pd
 from fc_autoclave_calc import calc_fc_autoclave, calculate_missing_seq_param
 import io
 
-# Настройка страницы
 st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
 
-# Соответствие ключ→название для таблицы
 LABELS = {
     "S_base_%": "Сера в осн. (%)",
     "As_base_%": "Мышьяк в осн. (%)",
@@ -35,19 +33,16 @@ LABELS = {
     "Mass_kek_fk_t": "КЕК ФК (т)"
 }
 
-# Форматеры по единицам
 UNIT_FORMATS = {
     "%":   lambda x: f"{x:.2f}",
     "т":   lambda x: f"{x:.0f}",
     "г/т": lambda x: f"{x:.2f}",
     "шт":  lambda x: f"{x:.2f}",
     "кг":  lambda x: f"{x:.0f}",
-    "":    lambda x: f"{x:.3f}"
+    "":    lambda x: f"{x:.3f}",
 }
 
 def format_value(key, value):
-    """Возвращает строку с нужным количеством знаков.
-    Для Mix_Au_g_t — замена точки на запятую."""
     if value is None:
         return ""
     if key == "Mix_Au_g_t":
@@ -73,7 +68,7 @@ def main():
 
     mode_val = st.radio(
         "Режим расчёта:",
-        options=[1, 2],
+        [1, 2],
         format_func=lambda x: "1 – Два концентрата" if x==1 else "2 – Один концентрат"
     )
     if st.button("Сбросить значения"):
@@ -81,7 +76,6 @@ def main():
 
     st.title("Расчёт флотоконцентрата и автоклавов")
     with st.form("input_form"):
-        # ⬇️ Исходное сырьё
         st.markdown("### 🟦 Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", "Концентрат 1")
         Au_base   = st.number_input("Золото в осн. (г/т)", 0.0, 200.0, 0.0, 0.1)
@@ -89,13 +83,11 @@ def main():
         As_base   = st.number_input("Мышьяк в осн. (%)",0.0,  30.0, 0.0, 0.01)
         Seq_base  = st.number_input("Seq осн. (%)",     0.0, 100.0, 0.0, 0.01)
 
-        # ⬇️ Параметры автоклава
         st.markdown("---")
         st.markdown("### ⚙️ Параметры автоклава")
         work_hours_year           = st.number_input("Рабочих часов в году",               1000, 9000, 7500, 100)
         seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", 0.1, 10.0, 4.07, 0.01)
 
-        # ⬇️ Стороннее сырьё (только в режиме 1)
         if mode_val == 1:
             st.markdown("---")
             st.markdown("### 🟥 Стороннее сырьё")
@@ -108,7 +100,6 @@ def main():
             name_ext = ""
             Au_ext = S_ext = As_ext = Seq_ext = 0.0
 
-        # ⬇️ Целевые параметры
         st.markdown("---")
         st.markdown("### 🎯 Целевые параметры")
         As_target        = st.number_input("Целевой As (%)",                           0.0, 10.0, 3.0, 0.01)
@@ -120,11 +111,9 @@ def main():
         submitted = st.form_submit_button("Рассчитать")
 
     if submitted:
-        # Нули → None
         Q_base = None if Q_base == 0 else Q_base
         Q_ext  = None if Q_ext  == 0 else Q_ext
 
-        # Авто‑Seq, если нужно
         if Seq_base == 0 and (S_base or As_base):
             Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
             st.info(f"Рассчитан серный эквивалент: {Seq_base:.2f}%")
@@ -132,7 +121,6 @@ def main():
             Seq_ext = calculate_missing_seq_param(S_ext, As_ext, None, k)
             st.info(f"Рассчитан серный эквивалент стороннего: {Seq_ext:.2f}%")
 
-        # Основной расчёт
         results = calc_fc_autoclave(
             name_base, Au_base, S_base, As_base, Seq_base,
             work_hours_year, seq_productivity_per_hour,
@@ -141,10 +129,10 @@ def main():
         )
         st.success("Расчёт завершён")
 
-        # Формируем вывод в таблицу
+        # Здесь и фильтруем _ext_‑поля в режиме 2
         skip_ext = {
-            "S_ext_%", "As_ext_%", "Seq_ext_%",
-            "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"
+            "S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext",
+            "Max_Q_ext_t", "Q_ext_required_t"
         }
         data = []
         for key, label in LABELS.items():
@@ -161,7 +149,6 @@ def main():
         df = pd.DataFrame(data)
         st.dataframe(df)
 
-        # Экспорт в Excel
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
             df.to_excel(writer, index=False, sheet_name="autoclave", startrow=2)
