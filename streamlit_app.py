@@ -164,7 +164,16 @@ def main():
             data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
-        st.dataframe(df)
+    # —————— Форматирование «Золото в смеси (г/т)» ——————
+    mask = df["Показатель"] == "Золото в смеси (г/т)"
+    if mask.any():
+        df.loc[mask, "Значение"] = (
+            df.loc[mask, "Значение"]
+              .astype(float)
+              .map(lambda x: f"{x:.2f}".replace('.', ','))
+        )
+    # ———————————————————————————————————————————————
+    st.dataframe(df)
 
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
