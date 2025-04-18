@@ -145,6 +145,7 @@ def main():
         st.success("Расчёт завершён")
         data = []
         for key in LABELS:
+            st.warning(f"KEY DEBUG: {key} → {results.get(key)}")
             if key in results:
                 if mode_val == 2 and key in ["S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"]:
                     continue  # пропуск стороннего сырья в режиме 2
