@@ -43,6 +43,9 @@ UNIT_FORMATS = {
 def format_value(key, value):
     if value is None:
         return ""
+    # Сразу обрабатываем Mix_Au_g_t — два знака и запятая
+    if key == "Mix_Au_g_t":
+        return f"{value:.2f}".replace(".", ",")
     if "%" in key:
         return UNIT_FORMATS["%"](value)
     elif key.endswith("_t"):
@@ -78,39 +81,40 @@ def main():
         st.markdown("### 🟦 Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
         Au_base = st.number_input("Золото в осн. (г/т)", 0.0, 200.0, 0.0, 0.1)
-        S_base = st.number_input("Сера в осн. (%)", 0.0, 100.0, 0.0, 0.01)
-        As_base = st.number_input("Мышьяк в осн. (%)", 0.0, 30.0, 0.0, 0.01)
-        Seq_base = st.number_input("Серный эквивалент осн. (%)", 0.0, 100.0, 0.0, 0.01)
+        S_base  = st.number_input("Сера в осн. (%)",        0.0, 100.0, 0.0, 0.01)
+        As_base = st.number_input("Мышьяк в осн. (%)",      0.0, 30.0,  0.0, 0.01)
+        Seq_base= st.number_input("Серный эквивалент осн. (%)",0.0,100.0,0.0,0.01)
 
         st.markdown("---")
         st.markdown("### ⚙️ Параметры автоклава")
-        work_hours_year = st.number_input("Рабочих часов в году", 1000, 9000, 7500, 100)
-        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", 0.1, 10.0, 4.07, 0.01)
+        work_hours_year         = st.number_input("Рабочих часов в году", 1000,9000,7500,100)
+        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", 0.1,10.0,4.07,0.01)
 
         if mode_val == 1:
             st.markdown("---")
             st.markdown("### 🟥 Стороннее сырьё")
-            name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
-            Au_ext = st.number_input("Золото в сторон. (г/т)", 0.0, 200.0, 0.0, 0.1)
-            S_ext = st.number_input("Сера в сторон. (%)", 0.0, 100.0, 0.0, 0.01)
-            As_ext = st.number_input("Мышьяк в сторон. (%)", 0.0, 100.0, 0.0, 0.01)
-            Seq_ext = st.number_input("Серный эквивалент сторон. (%)", 0.0, 50.0, 0.0, 0.01)
+            name_ext= st.text_input("Имя стороннего концентрата", value="Концентрат 2")
+            Au_ext  = st.number_input("Золото в сторон. (г/т)", 0.0,200.0,0.0,0.1)
+            S_ext   = st.number_input("Сера в сторон. (%)",    0.0,100.0,0.0,0.01)
+            As_ext  = st.number_input("Мышьяк в сторон. (%)",  0.0,100.0,0.0,0.01)
+            Seq_ext = st.number_input("Серный эквивалент сторон. (%)",0.0,50.0,0.0,0.01)
         else:
             name_ext = ""
             Au_ext = S_ext = As_ext = Seq_ext = 0.0
 
         st.markdown("---")
         st.markdown("### 🎯 Целевые параметры")
-        As_target = st.number_input("Целевой As (%)", 0.0, 10.0, 3.0, 0.01)
-        k = st.number_input("Коэффициент k", 0.0, 1.0, 0.371, 0.001)
-        Q_base = st.number_input("Q осн. (т/год)", 0.0, 500000.0, 140000.0, 1000.0)
-        Q_ext = st.number_input("Q сторон. (т/год)", 0.0, 500000.0, 38500.0, 1000.0)
-        yield_after_cond = st.number_input("Выход после кондиционирования (%)", 0.0, 100.0, 70.4, 0.1)
+        As_target = st.number_input("Целевой As (%)", 0.0,10.0,3.0,0.01)
+        k         = st.number_input("Коэффициент k",   0.0,1.0,0.371,0.001)
+        Q_base    = st.number_input("Q осн. (т/год)",   0.0,500000.0,140000.0,1000.0)
+        Q_ext     = st.number_input("Q сторон. (т/год)",0.0,500000.0,38500.0,1000.0)
+        yield_after_cond = st.number_input("Выход после кондиционирования (%)",0.0,100.0,70.4,0.1)
         submitted = st.form_submit_button("Рассчитать")
 
     if submitted:
         Q_base = None if Q_base == 0 else Q_base
         Q_ext  = None if Q_ext  == 0 else Q_ext
+
         if Seq_base == 0 and (S_base or As_base):
             Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
             st.info(f"Рассчитан серный эквивалент: {Seq_base:.2f}%")
@@ -128,7 +132,8 @@ def main():
 
         data = []
         for key in LABELS:
-            if key not in results: continue
+            if key not in results:
+                continue
             value = results[key]
             formatted = format_value(key, value)
             label = LABELS[key]
@@ -137,7 +142,7 @@ def main():
 
         df = pd.DataFrame(data)
 
-        # Форматируем Mix_Au_g_t повторно безопасно
+        # Дополнительное безопасное форматирование Mix_Au_g_t (не обязательно)
         mask = df["Показатель"] == "Золото в смеси (г/т)"
         if mask.any():
             df.loc[mask, "Значение"] = (
