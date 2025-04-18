@@ -135,6 +135,8 @@ def main():
             As_target=As_target, k=k, Q_base=Q_base, Q_ext=Q_ext,
             yield_after_cond=yield_after_cond, mode=mode_val
         )
+        st.warning(f"🔍 DEBUG: Mix_Au_g_t (raw) = {results['Mix_Au_g_t']}")
+
 
         st.success("Расчёт завершён")
         data = []
