@@ -46,6 +46,7 @@ def format_value(key, value):
         return UNIT_FORMATS["т"](value)
     elif key == "Mix_Au_g_t":
         return f"{value:.2f}".replace(".", ",")
+        return f"{value:.2f}".replace(".", ",")
     elif key in ("Au_base", "Au_ext"):
         return f"{value:.2f}"
         return f"{value:.2f}"
@@ -148,7 +149,7 @@ def main():
                 value = results[key]
                 formatted = format_value(key, value)
                 label = LABELS[key]
-                if str(formatted).strip() not in ('0', '0.0', '0.00') or key == 'Mix_Au_g_t':
+                data.append({"Показатель": label, "Значение": formatted})
                     data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
