@@ -138,6 +138,7 @@ def main():
             yield_after_cond=yield_after_cond, mode=mode_val
         )
         if 'Mix_Au_g_t' in results:
+    pass
 
 
         st.success("Расчёт завершён")
