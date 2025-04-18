@@ -151,7 +151,7 @@ def main():
                 value = results[key]
                 formatted = format_value(key, value)
                 label = LABELS[key]
-                if str(formatted).strip() not in ('0', '0.0', '0.00'):
+                if str(formatted).strip() not in ('0', '0.0', '0.00') or key == 'Mix_Au_g_t':
                     data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
