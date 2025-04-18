@@ -137,8 +137,6 @@ def main():
             As_target=As_target, k=k, Q_base=Q_base, Q_ext=Q_ext,
             yield_after_cond=yield_after_cond, mode=mode_val
         )
-        if 'Mix_Au_g_t' in results:
-    pass
 
 
         st.success("Расчёт завершён")
