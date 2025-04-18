@@ -81,34 +81,35 @@ def main():
         st.markdown("### 🟦 Исходное сырьё")
         name_base = st.text_input("Имя исходного концентрата", value="Концентрат 1")
         Au_base = st.number_input("Золото в осн. (г/т)", 0.0, 200.0, 0.0, 0.1)
-        S_base  = st.number_input("Сера в осн. (%)",        0.0, 100.0, 0.0, 0.01)
-        As_base = st.number_input("Мышьяк в осн. (%)",      0.0, 30.0,  0.0, 0.01)
-        Seq_base= st.number_input("Серный эквивалент осн. (%)",0.0,100.0,0.0,0.01)
+        S_base  = st.number_input("Сера восн. (%)",       0.0,100.0,0.0,0.01)
+        As_base = st.number_input("Мышьяк восн. (%)",     0.0,30.0, 0.0,0.01)
+        Seq_base= st.number_input("Seq осн. (%)",         0.0,100.0,0.0,0.01)
 
         st.markdown("---")
         st.markdown("### ⚙️ Параметры автоклава")
-        work_hours_year         = st.number_input("Рабочих часов в году", 1000,9000,7500,100)
-        seq_productivity_per_hour = st.number_input("Производительность автоклава (т/ч)", 0.1,10.0,4.07,0.01)
+        work_hours_year          = st.number_input("Рабочих часов в году", 1000,9000,7500,100)
+        seq_productivity_per_hour= st.number_input("Производительность автоклава (т/ч)",0.1,10.0,4.07,0.01)
 
         if mode_val == 1:
             st.markdown("---")
             st.markdown("### 🟥 Стороннее сырьё")
-            name_ext= st.text_input("Имя стороннего концентрата", value="Концентрат 2")
-            Au_ext  = st.number_input("Золото в сторон. (г/т)", 0.0,200.0,0.0,0.1)
-            S_ext   = st.number_input("Сера в сторон. (%)",    0.0,100.0,0.0,0.01)
-            As_ext  = st.number_input("Мышьяк в сторон. (%)",  0.0,100.0,0.0,0.01)
-            Seq_ext = st.number_input("Серный эквивалент сторон. (%)",0.0,50.0,0.0,0.01)
+            name_ext = st.text_input("Имя стороннего концентрата", value="Концентрат 2")
+            Au_ext   = st.number_input("Золото в сторон. (г/т)",0.0,200.0,0.0,0.1)
+            S_ext    = st.number_input("Сера в сторон. (%)",   0.0,100.0,0.0,0.01)
+            As_ext   = st.number_input("Мышьяк в сторон. (%)", 0.0,100.0,0.0,0.01)
+            Seq_ext  = st.number_input("Seq сторон. (%)",      0.0,50.0, 0.0,0.01)
         else:
             name_ext = ""
             Au_ext = S_ext = As_ext = Seq_ext = 0.0
 
         st.markdown("---")
         st.markdown("### 🎯 Целевые параметры")
-        As_target = st.number_input("Целевой As (%)", 0.0,10.0,3.0,0.01)
-        k         = st.number_input("Коэффициент k",   0.0,1.0,0.371,0.001)
-        Q_base    = st.number_input("Q осн. (т/год)",   0.0,500000.0,140000.0,1000.0)
-        Q_ext     = st.number_input("Q сторон. (т/год)",0.0,500000.0,38500.0,1000.0)
-        yield_after_cond = st.number_input("Выход после кондиционирования (%)",0.0,100.0,70.4,0.1)
+        As_target         = st.number_input("Целевой As (%)",        0.0,10.0,3.0,0.01)
+        k                 = st.number_input("Коэффициент k",          0.0,1.0,0.371,0.001)
+        Q_base            = st.number_input("Q осн. (т/год)",         0.0,500000.0,140000.0,1000.0)
+        Q_ext             = st.number_input("Q сторон. (т/год)",      0.0,500000.0,38500.0,1000.0)
+        yield_after_cond  = st.number_input("Выход после кондиционирования (%)",0.0,100.0,70.4,0.1)
+
         submitted = st.form_submit_button("Рассчитать")
 
     if submitted:
@@ -130,43 +131,38 @@ def main():
         )
         st.success("Расчёт завершён")
 
+        # Собираем все расчёты, фильтруя сторонние в режиме 2
         data = []
         for key in LABELS:
             if key not in results:
                 continue
+            if mode_val == 2 and key in [
+                "S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext",
+                "Max_Q_ext_t", "Q_ext_required_t"
+            ]:
+                continue
             value = results[key]
             formatted = format_value(key, value)
             label = LABELS[key]
-            if formatted not in ("", "0", "0.0", "0.00") or key == "Mix_Au_g_t":
+            if str(formatted).strip() not in ("", "0", "0.0", "0.00"):
                 data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
-
-        # Дополнительное безопасное форматирование Mix_Au_g_t (не обязательно)
-        mask = df["Показатель"] == "Золото в смеси (г/т)"
-        if mask.any():
-            df.loc[mask, "Значение"] = (
-                df.loc[mask, "Значение"]
-                  .str.replace(",", ".")
-                  .astype(float)
-                  .map(lambda x: f"{x:.2f}".replace(".", ","))
-            )
-
         st.dataframe(df)
 
+        # Экспорт в Excel
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
-            df_export = df.copy()
-            df_export.to_excel(writer, index=False, sheet_name="autoclave", startrow=2)
+            df.to_excel(writer, index=False, sheet_name="autoclave", startrow=2)
             ws = writer.sheets["autoclave"]
-            ws.write("A1", f"Результаты расчёта ({'2 – Один концентрат' if mode_val==2 else '1 – Два концентрата'})")
+            ws.write("A1", f"Результаты расчёта ({'2 – Один концентрат' if mode_val == 2 else '1 – Два концентрата'})")
             fmt1 = writer.book.add_format({"bg_color": "#DDEBF7"})
             fmt2 = writer.book.add_format({"bg_color": "#FCE4D6"})
-            for ri in range(1, len(df_export)+1):
+            for ri in range(1, len(df) + 1):
                 ws.set_row(ri, None, fmt1 if ri % 2 == 0 else fmt2)
 
         st.download_button(
-            "Скачать как Excel (.xlsx)",
+            label="Скачать как Excel (.xlsx)",
             data=buffer,
             file_name="autoclave_result.xlsx",
             mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
