@@ -143,12 +143,18 @@ def main():
         st.success("Расчёт завершён")
         data = []
         for key in LABELS:
+        if key == 'Mix_Au_g_t':
+            formatted = f"{results[key]:.2f}".replace('.', ',')
+            label = LABELS[key]
+            data.append({"Показатель": label, "Значение": formatted})
+            continue
             if key in results:
                 if mode_val == 2 and key in ["S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"]:
                     continue  # пропуск стороннего сырья в режиме 2
                 value = results[key]
                 formatted = format_value(key, value)
                 label = LABELS[key]
+            data.append({"Показатель": label, "Значение": formatted})
             data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
