@@ -1,7 +1,7 @@
 # streamlit_app.py — обновлено с акцентом на точный расчёт как в эталоне
 import streamlit as st
 import pandas as pd
-from fc_autoclave_calc_debug import calc_fc_autoclave, calculate_missing_seq_param
+from fc_autoclave_calc import calc_fc_autoclave, calculate_missing_seq_param
 import io
 
 LABELS = {
@@ -145,14 +145,13 @@ def main():
                 if mode_val == 2 and key in ["S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"]:
                     continue  # пропуск стороннего сырья в режиме 2
                 value = results[key]
-                formatted = str(format_value(key, value))
+                formatted = format_value(key, value)
                 label = LABELS[key]
                 if str(formatted).strip() not in ('0', '0.0', '0.00'):
                     data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
-        df["Значение"] = df["Значение"].astype(str)
-        st.table(df)
+        st.dataframe(df)
 
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
