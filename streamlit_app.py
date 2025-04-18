@@ -63,7 +63,6 @@ def main():
 
     code = st.text_input("Введите код доступа", type="password")
     if code != ACCESS_CODE:
-        st.warning("❌ Неверный код. Попробуйте снова")
         st.stop()
     
     mode_val = st.radio("Режим расчёта:", options=[1, 2], format_func=lambda x: "1 – Два концентрата" if x == 1 else "2 – Один концентрат")
@@ -139,13 +138,11 @@ def main():
             yield_after_cond=yield_after_cond, mode=mode_val
         )
         if 'Mix_Au_g_t' in results:
-            st.warning(f"🔍 DEBUG: Mix_Au_g_t (raw) = {results['Mix_Au_g_t']}")
 
 
         st.success("Расчёт завершён")
         data = []
         for key in LABELS:
-            st.warning(f"KEY DEBUG: {key} → {results.get(key)}")
             if key in results:
                 if mode_val == 2 and key in ["S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"]:
                     continue  # пропуск стороннего сырья в режиме 2
