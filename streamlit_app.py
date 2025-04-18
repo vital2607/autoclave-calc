@@ -143,7 +143,7 @@ def main():
                 if mode_val == 2 and key in ["S_ext_%", "As_ext_%", "Seq_ext_%", "Au_ext", "Max_Q_ext_t", "Q_ext_required_t"]:
                     continue  # пропуск стороннего сырья в режиме 2
                 value = results[key]
-                formatted = format_value(key, value)
+                formatted = str(format_value(key, value))
                 label = LABELS[key]
                 if str(formatted).strip() not in ('0', '0.0', '0.00'):
                     data.append({"Показатель": label, "Значение": formatted})
