@@ -115,8 +115,6 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         'Mix_Seq_%': Seq_mix,
         'Total_Seq_mass_t': total_seq_mass,
         'Autoclaves_used': round(num_autoclaves, 2),
-        print("DEBUG Mix_Au_g_t raw:", Au_mix)
-    results['Mix_Au_g_t'] = round(Au_mix, 2)
         'Total_Au_kg': round(total_au_mass, 0),
         'Mass_kek_fk_t': mass_kek_fk
     })
