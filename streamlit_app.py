@@ -150,7 +150,7 @@ def main():
 
         df = pd.DataFrame(data)
         df["Значение"] = df["Значение"].astype(str)
-        st.dataframe(df)
+        st.table(df)
 
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
