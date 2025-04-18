@@ -143,6 +143,12 @@ def main():
         st.success("Расчёт завершён")
         data = []
         for key in LABELS:
+        value = results.get(key)
+        if key == 'Mix_Au_g_t':
+            formatted = f"{results[key]:.2f}".replace('.', ',')
+            label = LABELS[key]
+            data.append({"Показатель": label, "Значение": formatted})
+            continue
         if key == 'Mix_Au_g_t':
             formatted = f"{results[key]:.2f}".replace('.', ',')
             label = LABELS[key]
