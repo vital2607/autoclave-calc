@@ -149,7 +149,8 @@ def main():
                     data.append({"Показатель": label, "Значение": formatted})
 
         df = pd.DataFrame(data)
-        st.dataframe(df)
+df["Значение"] = df["Значение"].astype(str)
+st.dataframe(df)
 
         buffer = io.BytesIO()
         with pd.ExcelWriter(buffer, engine='xlsxwriter') as writer:
