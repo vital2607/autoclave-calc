@@ -44,7 +44,7 @@ def format_value(key, value):
         return UNIT_FORMATS["%"](value)
     elif key.endswith("_t"):
         return UNIT_FORMATS["т"](value)
-    elif key.endswith("g_t"):
+    elif key.endswith("g_t") or "Au_" in key:
         return f"{value:.2f}"
     elif key.endswith("_kg"):
         return UNIT_FORMATS["кг"](value)
