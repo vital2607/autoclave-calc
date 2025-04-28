@@ -5,6 +5,7 @@ import io
 
 st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
 
+# Метки для вывода
 LABELS = {
     "S_base_%":          "Сера в осн. (%)",
     "As_base_%":         "Мышьяк в осн. (%)",
@@ -33,9 +34,12 @@ LABELS = {
     "Mass_kek_fk_t":     "КЕК ФК (т)"
 }
 
+# Форматирование значений
 def format_value(key, value):
     if value is None:
         return ""
+    if key == "Mix_Au_g_t":
+        return f"{value:.2f}".replace(".", ",")
     if key.endswith("_t") or key.endswith("_kg"):
         return f"{value:.0f}"
     if key.endswith("_g_t") or "%" in key:
@@ -69,8 +73,8 @@ def main():
     As_base  = st.number_input("Мышьяк в осн. (%)",   0.0, 100.0, 0.0, 0.01)
     Seq_base = st.number_input("Серный эквивалент осн. (%)", 0.0, 100.0, 0.0, 0.01)
 
-    # 📙 Стороннее сырьё (только для режима 1)
-    if mode_val == 1:
+    # 📙 Стороннее сырьё — показываем в режиме 1 и 3
+    if mode_val in [1, 3]:
         st.markdown("---")
         st.markdown("### 📙 Стороннее сырьё")
         Au_ext  = st.number_input("Золото в сторон. (г/т)", 0.0, 500.0, 0.0, 0.1)
@@ -100,7 +104,7 @@ def main():
         if Seq_base == 0 and (S_base or As_base):
             Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
             st.info(f"Рассчитан серный эквивалент осн.: {Seq_base:.2f}%")
-        if mode_val == 1 and Seq_ext == 0 and (S_ext or As_ext):
+        if mode_val in [1, 3] and Seq_ext == 0 and (S_ext or As_ext):
             Seq_ext = calculate_missing_seq_param(S_ext, As_ext, None, k)
             st.info(f"Рассчитан серный эквивалент сторон.: {Seq_ext:.2f}%")
         if mode_val == 3:
@@ -118,7 +122,7 @@ def main():
         )
         st.success("Расчёт завершён!")
 
-        # Вывод результатов
+        # Вывод таблицы
         data = []
         for key, label in LABELS.items():
             if key not in results:
