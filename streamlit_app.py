@@ -1,34 +1,45 @@
 import streamlit as st
 import pandas as pd
 from fc_autoclave_calc import calc_fc_autoclave, calculate_missing_seq_param
+import io
 
 st.set_page_config(page_title="Автоклавный расчёт", layout="wide")
 
 LABELS = {
-    "S_base_%":         "Сера в осн. (%)",
-    "As_base_%":        "Мышьяк в осн. (%)",
-    "Seq_base_%":       "Серный эквивалент осн. (%)",
-    "Au_base":          "Золото в осн. (г/т)",
-    "S_ext_%":          "Сера в сторон. (%)",
-    "As_ext_%":         "Мышьяк в сторон. (%)",
-    "Seq_ext_%":        "Серный эквивалент сторон. (%)",
-    "Au_ext":           "Золото в сторон. (г/т)",
-    "As_target":        "Целевой As (%)",
-    "k":                "Коэффициент k",
-    "yield_after_cond": "Выход после кондиционирования (%)",
-    "Total_capacity_t": "Общая годовая мощность (т)",
-    "Max_Q_base_t":     "Макс. масса осн. сырья (т)",
-    "Max_total_Q_t":    "Макс. общий объём сырья (т)",
-    "Q_base_t":         "Факт. масса осн. сырья (т)",
-    "Q_ext_required_t": "Факт. масса сторон. сырья (т)",
-    "Mix_total_Q_t":    "Фактич. общая смесь (т)",
-    "Mix_As_%":         "Итоговый As в смеси (%)",
-    "Mix_Seq_%":        "Итоговый Seq в смеси (%)",
-    "Total_Seq_mass_t": "Сумма серного эквивалента (т)",
-    "Autoclaves_used":  "Нужно автоклавов (шт)",
-    "Mix_Au_g_t":       "Золото в смеси (г/т)",
-    "Total_Au_kg":      "Всего золота (кг)",
-    "Mass_kek_fk_t":    "КЕК ФК (т)"
+    "S_base_%":          "Сера в осн. (%)",
+    "As_base_%":         "Мышьяк в осн. (%)",
+    "Seq_base_%":        "Серный эквивалент осн. (%)",
+    "Au_base":           "Золото в осн. (г/т)",
+    "S_ext_%":           "Сера в сторон. (%)",
+    "As_ext_%":          "Мышьяк в сторон. (%)",
+    "Seq_ext_%":         "Серный эквивалент сторон. (%)",
+    "Au_ext":            "Золото в сторон. (г/т)",
+    "As_target":         "Целевой As (%)",
+    "k":                 "Коэффициент k",
+    "yield_after_cond":  "Выход после кондиционирования (%)",
+    "Total_capacity_t":  "Общая годовая мощность (т)",
+    "Max_Q_base_t":      "Макс. масса осн. сырья (т)",
+    "Max_Q_ext_t":       "Макс. масса сторон. сырья (т)",
+    "Max_total_Q_t":     "Макс. общий объём сырья (т)",
+    "Q_base_t":          "Факт. масса осн. сырья (т)",
+    "Q_ext_required_t":  "Факт. масса сторон. сырья (т)",
+    "Mix_total_Q_t":     "Фактич. общая смесь (т)",
+    "Mix_As_%":          "Итоговый As в смеси (%)",
+    "Mix_Seq_%":         "Итоговый Seq в смеси (%)",
+    "Total_Seq_mass_t":  "Сумма серного эквивалента (т)",
+    "Autoclaves_used":   "Нужно автоклавов (шт)",
+    "Mix_Au_g_t":        "Золото в смеси (г/т)",
+    "Total_Au_kg":       "Всего золота (кг)",
+    "Mass_kek_fk_t":     "КЕК ФК (т)"
+}
+
+UNIT_FORMATS = {
+    "%":   lambda x: f"{x:.2f}",
+    "т":   lambda x: f"{x:.0f}",
+    "г/т": lambda x: f"{x:.2f}",
+    "шт":  lambda x: f"{x:.2f}",
+    "кг":  lambda x: f"{x:.0f}",
+    "":    lambda x: f"{x:.3f}",
 }
 
 def format_value(key, value):
@@ -37,25 +48,24 @@ def format_value(key, value):
     if key == "Mix_Au_g_t":
         return f"{value:.2f}".replace(".", ",")
     if "%" in key:
-        return f"{value:.2f}"
+        return UNIT_FORMATS["%"](value)
     if key.endswith("_t"):
-        return f"{value:.0f}"
+        return UNIT_FORMATS["т"](value)
+    if key in ("Au_base", "Au_ext"):
+        return f"{value:.2f}"
     if key.endswith("_kg"):
-        return f"{value:.0f}"
-    return f"{value:.2f}"
+        return UNIT_FORMATS["кг"](value)
+    if key.endswith("_used"):
+        return UNIT_FORMATS["шт"](value)
+    return UNIT_FORMATS[""](value)
 
 def main():
-    # Авторизация
     ACCESS_CODE = "23101981"
-    if st.text_input("Введите код доступа", type="password") != ACCESS_CODE:
+    code = st.text_input("Введите код доступа", type="password")
+    if code != ACCESS_CODE:
         st.warning("❌ Неверный код. Попробуйте снова")
         st.stop()
 
-    # Общие параметры
-    work_hours_year = st.number_input("Рабочие часы в год", 0.0, 10000.0, 8000.0, 10.0)
-    seq_prod_hour   = st.number_input("Производительность Seq, т/ч", 0.0, 500.0, 50.0, 0.1)
-
-    # Выбор режима
     mode_val = st.radio(
         "Режим расчёта:",
         [1, 2, 3],
@@ -65,39 +75,48 @@ def main():
             3: "3 – Смешение по объёмам"
         }[x]
     )
+    if st.button("Сбросить значения"):
+        st.experimental_rerun()
 
-    # 🟩 Базовое сырьё
-    st.markdown("### 🟩 Базовое сырьё")
-    Au_base  = st.number_input("Золото в осн. (г/т)", 0.0, 200.0, 21.0, 0.1)
-    S_base   = st.number_input("Сера в осн. (%)",    0.0, 100.0, 0.0,  0.01)
-    As_base  = st.number_input("Мышьяк в осн. (%)",  0.0, 100.0, 0.0,  0.01)
-    Seq_base = st.number_input("Seq осн. (%)",       0.0,  50.0, 25.8, 0.01)
+    st.title("Расчёт флотоконцентрата и автоклавов")
+    with st.form("input_form"):
+        st.markdown("### 🟦 Исходное сырьё")
+        Au_base  = st.number_input("Золото в осн. (г/т)", 0.0, 200.0, 0.0, 0.1)
+        S_base   = st.number_input("Сера в осн. (%)",   0.0, 100.0, 0.0, 0.01)
+        As_base  = st.number_input("Мышьяк в осн. (%)", 0.0,  30.0, 0.0, 0.01)
+        Seq_base = st.number_input("Seq осн. (%)",      0.0, 100.0, 0.0, 0.01)
 
-    # 🟥 Стороннее — только для режима 1
-    if mode_val == 1:
         st.markdown("---")
-        st.markdown("### 🟥 Стороннее сырьё")
-        Au_ext  = st.number_input("Золото в сторон. (г/т)", 0.0,200.0,40.0,0.1)
-        S_ext   = st.number_input("Сера в сторон. (%)",    0.0,100.0,0.0,0.01)
-        As_ext  = st.number_input("Мышьяк в сторон. (%)",  0.0,100.0,0.0,0.01)
-        Seq_ext = st.number_input("Seq сторон. (%)",       0.0, 50.0,30.7,0.01)
-    else:
-        Au_ext = S_ext = As_ext = Seq_ext = 0.0
+        st.markdown("### ⚙️ Параметры автоклава")
+        work_hours_year = st.number_input("Рабочих часов в году",               1000, 9000, 7500, 100)
+        seq_prod_hour   = st.number_input("Производительность автоклава (т/ч)", 0.1, 10.0, 4.07, 0.01)
 
-    # 📦 Объёмы сырья — всегда доступны
-    st.markdown("---")
-    st.markdown("### 📦 Объёмы сырья (т)")
-    Q_base = st.number_input("Объём базового сырья, т",   0.0, 1e9, 0.0, 1.0)
-    Q_ext  = st.number_input("Объём стороннего сырья, т", 0.0, 1e9, 0.0, 1.0)
+        if mode_val == 1:
+            st.markdown("---")
+            st.markdown("### 🟥 Стороннее сырьё")
+            Au_ext  = st.number_input("Золото в сторон. (г/т)", 0.0, 200.0, 0.0, 0.1)
+            S_ext   = st.number_input("Сера в сторон. (%)",    0.0, 100.0, 0.0, 0.01)
+            As_ext  = st.number_input("Мышьяк в сторон. (%)",  0.0, 100.0, 0.0, 0.01)
+            Seq_ext = st.number_input("Seq сторон. (%)",       0.0,  50.0, 0.0, 0.01)
+        else:
+            Au_ext = S_ext = As_ext = Seq_ext = 0.0
 
-    # 🎯 Целевые параметры
-    st.markdown("---")
-    As_target        = st.number_input("Целевой As (%)",                    0.0, 10.0, 3.0,   0.01)
-    k                = st.number_input("Коэффициент k",                    0.0, 10.0, 1.0,   0.01)
-    yield_after_cond = st.number_input("Выход после кондиционирования (%)",0.0,100.0,70.4,0.01)
+        st.markdown("---")
+        st.markdown("### 🎯 Целевые параметры")
+        As_target        = st.number_input("Целевой As (%)",                    0.0, 10.0, 3.0,   0.01)
+        k                = st.number_input("Коэффициент k",                    0.0, 1.0,  0.371, 0.001)
+        Q_base           = st.number_input("Q осн. (т/год)",                    0.0, 500000.0, 140000.0, 1000.0)
+        Q_ext            = st.number_input("Q сторон. (т/год)",                  0.0, 500000.0,   38500.0, 1000.0)
+        yield_after_cond = st.number_input("Выход после кондиционирования (%)",0.0,100.0,70.4,0.1)
 
-    if st.button("Рассчитать"):
-        # Автоподсчёт Seq
+        submitted = st.form_submit_button("Рассчитать")
+
+    if submitted:
+        # заменяем нули на None
+        Qb = None if Q_base == 0 else Q_base
+        Qe = None if Q_ext  == 0 else Q_ext
+
+        # авто-Seq
         if Seq_base == 0 and (S_base or As_base):
             Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
             st.info(f"Рассчитан Seq осн.: {Seq_base:.2f}%")
@@ -105,17 +124,13 @@ def main():
             Seq_ext = calculate_missing_seq_param(S_ext, As_ext, None, k)
             st.info(f"Рассчитан Seq сторон.: {Seq_ext:.2f}%")
 
-        # Для режима 3 As_target фиксируем в 0
-        if mode_val == 3:
-            As_target = 0.0
-
         results = calc_fc_autoclave(
             name_base="Базовый",
             Au_base=Au_base, S_base=S_base, As_base=As_base, Seq_base=Seq_base,
             work_hours_year=work_hours_year, seq_productivity_per_hour=seq_prod_hour,
             name_ext="Сторонний", Au_ext=Au_ext, S_ext=S_ext, As_ext=As_ext, Seq_ext=Seq_ext,
-            As_target=As_target, k=k, Q_base=Q_base, Q_ext=Q_ext,
-            yield_after_cond=yield_after_cond, mode=mode_val
+            As_target=As_target, k=k, Q_base=Qb, Q_ext=Qe, yield_after_cond=yield_after_cond,
+            mode=mode_val
         )
         st.success("Расчёт завершён")
 
@@ -126,11 +141,34 @@ def main():
                 continue
             if mode_val == 2 and key in skip_ext:
                 continue
-            val = format_value(key, results[key])
-            if val.strip() in ("", "0", "0.0", "0,00"):
+            raw = results[key]
+            formatted = format_value(key, raw)
+            if formatted.strip() in ("", "0", "0.0", "0,00"):
                 continue
-            data.append({"Показатель": label, "Значение": val})
-        st.dataframe(pd.DataFrame(data))
+            data.append({"Показатель": label, "Значение": formatted})
+
+        df = pd.DataFrame(data)
+        st.dataframe(df)
+
+        # (оставляем экспорт в Excel без изменений)
+        buffer = io.BytesIO()
+        with pd.ExcelWriter(buffer, engine="xlsxwriter") as writer:
+            df.to_excel(writer, index=False, sheet_name="autoclave", startrow=2)
+            ws = writer.sheets["autoclave"]
+            ws.write("A1",
+                f"Результаты расчёта ({'2 – Один концентрат' if mode_val==2 else '1 – Два концентрата'})"
+            )
+            fmt1 = writer.book.add_format({"bg_color":"#DDEBF7"})
+            fmt2 = writer.book.add_format({"bg_color":"#FCE4D6"})
+            for ri in range(1, len(df)+1):
+                ws.set_row(ri, None, fmt1 if ri%2==0 else fmt2)
+
+        st.download_button(
+            "Скачать как Excel (.xlsx)",
+            data=buffer,
+            file_name="autoclave_result.xlsx",
+            mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
 
 if __name__ == "__main__":
     main()
