@@ -1,6 +1,5 @@
 import pandas as pd
 
-# Форматирование значений
 def format_value(value, unit):
     if value is None:
         return ""
@@ -15,7 +14,6 @@ def format_value(value, unit):
     else:
         return f"{value:.2f}"
 
-# Расчёт недостающих Seq/S/As
 def calculate_missing_seq_param(S=None, As=None, Seq=None, k=1.0):
     try:
         if Seq is None and S is not None and As is not None:
@@ -29,7 +27,6 @@ def calculate_missing_seq_param(S=None, As=None, Seq=None, k=1.0):
     except:
         return None
 
-# Основной расчёт
 def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
                       work_hours_year, seq_productivity_per_hour,
                       name_ext, Au_ext, S_ext, As_ext, Seq_ext,
@@ -37,7 +34,6 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
                       yield_after_cond=100.0, mode=1):
     results = {}
 
-    # 1) Базовые параметры
     if Seq_base is None:
         Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
     if S_base is None:
@@ -46,7 +42,6 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         As_base = calculate_missing_seq_param(S_base, None, Seq_base, k)
     f_Seq_base = Seq_base / 100 if Seq_base else 0.0
 
-    # 2) Сторонние (только для режима 1)
     if mode == 1:
         if Seq_ext is None:
             Seq_ext = calculate_missing_seq_param(S_ext, As_ext, None, k)
@@ -58,11 +53,9 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
     else:
         f_Seq_ext = 0.0
 
-    # 3) Общая мощность
     seq_prod_per_year = seq_productivity_per_hour * work_hours_year
     total_capacity    = seq_prod_per_year * 2
 
-    # Записать входные поля
     def _record_inputs():
         results.update({
             'S_base_%':         S_base,
@@ -79,25 +72,22 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
             'Total_capacity_t': total_capacity,
         })
 
-    # ─── РЕЖИМ 3: СМЕШЕНИЕ ПО Q_base / Q_ext ─────────────────────────
+    # ─── РЕЖИМ 3: смешение по заданным Q_base и Q_ext ───
     if mode == 3:
         Qb = Q_base or 0.0
-        Qe = Q_ext  or 0.0
+        Qe = Q_ext or 0.0
         mix_q = Qb + Qe
         if mix_q == 0:
             _record_inputs()
             return results
 
-        # взвешенные средние
         As_mix    = ((As_base or 0.0) * Qb + (As_ext or 0.0) * Qe) / mix_q
         f_Seq_mix = (f_Seq_base * Qb + f_Seq_ext * Qe) / mix_q
         Seq_mix   = f_Seq_mix * 100
 
-        # Seq-масса и автоклавы
         total_seq_mass = f_Seq_mix * mix_q
         num_autoclaves = total_seq_mass / seq_prod_per_year if seq_prod_per_year else 0.0
 
-        # золото и масса после кондиционирования
         mass_after_yield = mix_q * (yield_after_cond / 100.0)
         Au_total_mass   = (Au_base or 0.0) * Qb + (Au_ext or 0.0) * Qe
         Au_mix          = Au_total_mass / mass_after_yield if mass_after_yield else 0.0
@@ -106,9 +96,9 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
 
         _record_inputs()
         results.update({
-            'Max_Q_base_t':     Qb,
-            'Max_Q_ext_t':      Qe,
-            'Max_total_Q_t':    mix_q,
+            'Max_Q_base_t':     0,
+            'Max_Q_ext_t':      0,
+            'Max_total_Q_t':    0,
             'Q_base_t':         Qb,
             'Q_ext_required_t': Qe,
             'Mix_total_Q_t':    mix_q,
@@ -122,30 +112,20 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         })
         return results
 
-    # ─── РЕЖИМ 1: ДВА КОНЦЕНТРАТА (As_target ≠ 0) ─────────────────────
+    # ─── РЕЖИМ 1 и 2: стандартные ───
+    # Сначала считаем максимальные массы по Seq автоклава
     if mode == 1:
         coeff = (As_target - As_base) / (As_ext - As_target) if As_ext != As_target else 0.0
-        Q_base_max         = total_capacity / (f_Seq_base + f_Seq_ext * coeff) if (f_Seq_base + f_Seq_ext * coeff) else 0.0
-        Q_ext_required_max = Q_base_max * coeff
+        Max_Qb = total_capacity / (f_Seq_base + f_Seq_ext * coeff) if (f_Seq_base + f_Seq_ext * coeff) else 0.0
+        Max_Qe = Max_Qb * coeff
+    else:
+        Max_Qb = total_capacity / f_Seq_base if f_Seq_base else 0.0
+        Max_Qe = 0.0
 
-        if Q_base is not None and Q_ext is None:
-            Qb = Q_base
-            Qe = Q_base * coeff
-        elif Q_ext is not None and Q_base is None:
-            Qe = Q_ext
-            Qb = Q_ext * coeff
-        else:
-            Qb = Q_base_max
-            Qe = Q_ext_required_max
+    # Теперь берём фактические массы из ввода пользователя
+    Qb = Q_base if Q_base is not None else Max_Qb
+    Qe = Q_ext  if Q_ext  is not None else Max_Qe
 
-    # ─── РЕЖИМ 2: ОДИН КОНЦЕНТРАТ ───────────────────────────────────
-    else:  # mode == 2
-        Qb = Q_base or (total_capacity / f_Seq_base if f_Seq_base else 0.0)
-        Qe = 0.0
-        Q_base_max = total_capacity / f_Seq_base if f_Seq_base else 0.0
-        Q_ext_required_max = 0.0
-
-    # общие расчёты для режимов 1 и 2
     mix_q          = Qb + Qe
     As_mix         = (As_base * Qb + As_ext * Qe) / mix_q if mix_q else 0.0
     f_Seq_mix      = (f_Seq_base * Qb + f_Seq_ext * Qe) / mix_q if mix_q else 0.0
@@ -161,9 +141,9 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
 
     _record_inputs()
     results.update({
-        'Max_Q_base_t':     Qb if mode == 1 else Q_base_max,
-        'Max_Q_ext_t':      Qe if mode == 1 else 0.0,
-        'Max_total_Q_t':    (Q_base_max + (Q_ext_required_max if mode==1 else 0.0)) if mode == 1 else Q_base_max,
+        'Max_Q_base_t':     Max_Qb,
+        'Max_Q_ext_t':      Max_Qe,
+        'Max_total_Q_t':    Max_Qb + Max_Qe,
         'Q_base_t':         Qb,
         'Q_ext_required_t': Qe,
         'Mix_total_Q_t':    mix_q,
@@ -175,4 +155,5 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         'Total_Au_kg':      round(total_au_mass, 0),
         'Mass_kek_fk_t':    mass_kek_fk
     })
+
     return results
