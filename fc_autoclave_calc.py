@@ -72,7 +72,7 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
             'Total_capacity_t': total_capacity,
         })
 
-    # ─── РЕЖИМ 3: смешение по заданным Q_base и Q_ext ───
+    # ─── РЕЖИМ 3: смешение по объёмам ───
     if mode == 3:
         Qb = Q_base or 0.0
         Qe = Q_ext or 0.0
@@ -112,19 +112,33 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         })
         return results
 
-    # ─── РЕЖИМ 1 и 2: стандартные ───
-    # Сначала считаем максимальные массы по Seq автоклава
+    # ─── РЕЖИМЫ 1 и 2 ───
     if mode == 1:
+        # расчёт коэффициента замещения
         coeff = (As_target - As_base) / (As_ext - As_target) if As_ext != As_target else 0.0
         Max_Qb = total_capacity / (f_Seq_base + f_Seq_ext * coeff) if (f_Seq_base + f_Seq_ext * coeff) else 0.0
         Max_Qe = Max_Qb * coeff
-    else:
+
+        # Расчёт фактических масс:
+        if Q_base and not Q_ext:
+            Qb = Q_base
+            Qe = Qb * coeff
+        elif Q_ext and not Q_base:
+            Qe = Q_ext
+            Qb = Qe / coeff if coeff != 0 else 0
+        elif Q_base and Q_ext:
+            Qb = Q_base
+            Qe = Q_ext
+        else:
+            Qb = Max_Qb
+            Qe = Max_Qe
+
+    else:  # mode == 2
         Max_Qb = total_capacity / f_Seq_base if f_Seq_base else 0.0
         Max_Qe = 0.0
 
-    # Теперь берём фактические массы из ввода пользователя
-    Qb = Q_base if Q_base is not None else Max_Qb
-    Qe = Q_ext  if Q_ext  is not None else Max_Qe
+        Qb = Q_base if Q_base is not None else Max_Qb
+        Qe = 0.0
 
     mix_q          = Qb + Qe
     As_mix         = (As_base * Qb + As_ext * Qe) / mix_q if mix_q else 0.0
