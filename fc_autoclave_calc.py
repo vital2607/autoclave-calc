@@ -17,7 +17,6 @@ def format_value(value, unit):
 
 # Расчёт недостающих параметров Seq ↔︎ S ↔︎ As
 # k — поправочный коэффициент из методики ПАО «Полиметалл»
-
 def calculate_missing_seq_param(S, As, Seq, k):
     if Seq is not None:
         return Seq
@@ -27,7 +26,6 @@ def calculate_missing_seq_param(S, As, Seq, k):
         return As * k
     return None
 
-
 def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
                       work_hours_year, seq_productivity_per_hour,
                       name_ext, Au_ext, S_ext, As_ext, Seq_ext,
@@ -35,6 +33,7 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
                       yield_after_cond=100.0, mode=1):
     results = {}
 
+    # 1) Заполняем недостающие базовые параметры
     if Seq_base is None:
         Seq_base = calculate_missing_seq_param(S_base, As_base, None, k)
     if S_base is None:
@@ -43,6 +42,7 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         As_base = calculate_missing_seq_param(S_base, None, Seq_base, k)
     f_Seq_base = Seq_base / 100 if Seq_base else 0.0
 
+    # 2) В режиме «Два концентрата» готовим сторонние параметры
     if mode == 1:
         if Seq_ext is None:
             Seq_ext = calculate_missing_seq_param(S_ext, As_ext, None, k)
@@ -52,10 +52,12 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
             As_ext = calculate_missing_seq_param(S_ext, None, Seq_ext, k)
         f_Seq_ext = Seq_ext / 100 if Seq_ext else 0.0
 
-    # ---➤ Fast exit when As_target is 0 (no arsenic target): use actual volumes to compute blended mix
+    # ---➤ Fast exit: если целевой As = 0 — считаем смесь по фактическим объёмам
     if mode == 1 and (As_target is None or As_target == 0):
-        # Determine supplied volumes; default to maximal base capacity if not provided
-        total_capacity = (seq_productivity_per_hour * work_hours_year) * 2
+        seq_productivity_per_year = seq_productivity_per_hour * work_hours_year
+        total_capacity = seq_productivity_per_year * 2
+
+        # Определяем Q_base/Q_ext: если не заданы — всё базовое, стороннего 0
         if Q_base is None and Q_ext is None:
             Q_base = total_capacity / f_Seq_base if f_Seq_base else 0.0
             Q_ext_required = 0.0
@@ -65,46 +67,47 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
 
         mix_total_q = Q_base + Q_ext_required
         if mix_total_q == 0:
-            return results  # nothing to calculate
+            return results
 
-        # Weighted averages for compositions
-        As_mix = ((As_base or 0.0) * Q_base + (As_ext or 0.0) * Q_ext_required) / mix_total_q
+        # Взвешенные средние по составам
+        As_mix   = ((As_base  or 0.0) * Q_base + (As_ext  or 0.0) * Q_ext_required) / mix_total_q
         f_Seq_mix = (f_Seq_base * Q_base + f_Seq_ext * Q_ext_required) / mix_total_q
-        Seq_mix = f_Seq_mix * 100
+        Seq_mix  = f_Seq_mix * 100
 
-        # Total Seq mass and autoclaves
+        # Масса Seq и автоклавов
         total_seq_mass = f_Seq_mix * mix_total_q
-        seq_productivity_per_year = seq_productivity_per_hour * work_hours_year
         num_autoclaves = total_seq_mass / seq_productivity_per_year if seq_productivity_per_year else 0.0
 
-        # Gold
+        # Золото
         Au_total_mass = (Au_base or 0.0) * Q_base + (Au_ext or 0.0) * Q_ext_required
         mass_after_yield = mix_total_q * (yield_after_cond / 100)
         Au_mix = Au_total_mass / mass_after_yield if mass_after_yield else 0.0
 
-        # Update results and return
+        # Обновляем и возвращаем
         results.update({
-            'Max_Q_base_t': Q_base,
-            'Max_Q_ext_t': Q_ext_required,
-            'Max_total_Q_t': mix_total_q,
-            'Q_base_t': Q_base,
+            'Max_Q_base_t':     Q_base,
+            'Max_Q_ext_t':      Q_ext_required,
+            'Max_total_Q_t':    mix_total_q,
+            'Q_base_t':         Q_base,
             'Q_ext_required_t': Q_ext_required,
-            'Mix_total_Q_t': mix_total_q,
-            'Mix_As_%': As_mix,
-            'Mix_Seq_%': Seq_mix,
+            'Mix_total_Q_t':    mix_total_q,
+            'Mix_As_%':         As_mix,
+            'Mix_Seq_%':        Seq_mix,
             'Total_Seq_mass_t': total_seq_mass,
-            'Autoclaves_used': round(num_autoclaves, 2),
-            'Mix_Au_g_t': round(Au_mix, 2),
-            'Total_Au_kg': round(Au_total_mass / 1000, 0),
+            'Autoclaves_used':  round(num_autoclaves, 2),
+            'Mix_Au_g_t':       round(Au_mix, 2),
+            'Total_Au_kg':      round(Au_total_mass / 1000, 0),
         })
         return results
 
+    # 3) Обычный расчёт: сохраняем входные параметры
     results.update({
-        'S_base_%': S_base, 'As_base_%': As_base, 'Seq_base_%': Seq_base, 'Au_base': Au_base or 0.0,
-        'S_ext_%': S_ext, 'As_ext_%': As_ext, 'Seq_ext_%': Seq_ext, 'Au_ext': Au_ext or 0.0,
-        'As_target': As_target, 'k': k, 'yield_after_cond': yield_after_cond
+        'S_base_%':     S_base,   'As_base_%':   As_base,   'Seq_base_%': Seq_base, 'Au_base': Au_base or 0.0,
+        'S_ext_%':      S_ext,    'As_ext_%':    As_ext,    'Seq_ext_%':  Seq_ext,  'Au_ext':  Au_ext or 0.0,
+        'As_target':    As_target,'k':           k,          'yield_after_cond': yield_after_cond,
     })
 
+    # Полная мощность
     seq_productivity_per_year = seq_productivity_per_hour * work_hours_year
     total_capacity = seq_productivity_per_year * 2
     results['Total_capacity_t'] = total_capacity
@@ -113,7 +116,6 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
         coeff = (As_target - As_base) / (As_ext - As_target) if As_ext != As_target else 0.0
         Q_base_max = total_capacity / (f_Seq_base + f_Seq_ext * coeff) if (f_Seq_base + f_Seq_ext * coeff) else 0.0
         Q_ext_required_max = Q_base_max * coeff
-        max_total_q = Q_base_max + Q_ext_required_max
 
         if Q_base is not None and Q_ext is None:
             Q_ext_required = Q_base * coeff
@@ -125,25 +127,25 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
             Q_ext_required = Q_ext_required_max
 
         mix_total_q = Q_base + Q_ext_required
-        As_mix = (As_base * Q_base + As_ext * Q_ext_required) / mix_total_q if mix_total_q else 0.0
-        f_Seq_mix = (f_Seq_base * Q_base + f_Seq_ext * Q_ext_required) / mix_total_q if mix_total_q else 0.0
-        Seq_mix = f_Seq_mix * 100
+        As_mix      = (As_base * Q_base + As_ext * Q_ext_required) / mix_total_q if mix_total_q else 0.0
+        f_Seq_mix   = (f_Seq_base * Q_base + f_Seq_ext * Q_ext_required) / mix_total_q if mix_total_q else 0.0
+        Seq_mix     = f_Seq_mix * 100
     else:
-        Q_base_max = total_capacity / f_Seq_base if f_Seq_base else 0.0
-        mix_total_q = Q_base if Q_base else Q_base_max
-        As_mix = As_base
-        Seq_mix = Seq_base
-        f_Seq_mix = f_Seq_base
+        Q_base_max     = total_capacity / f_Seq_base if f_Seq_base else 0.0
+        mix_total_q    = Q_base if Q_base else Q_base_max
+        As_mix         = As_base
+        Seq_mix        = Seq_base
+        f_Seq_mix      = f_Seq_base
         Q_ext_required = 0.0
-        Q_base = mix_total_q
-        max_total_q = Q_base_max
+        Q_base         = mix_total_q
 
     total_seq_mass = f_Seq_mix * mix_total_q
     num_autoclaves = total_seq_mass / seq_productivity_per_year if seq_productivity_per_year else 0.0
 
-    # ⬇️ Исправление расчёта золота после кондиционирования
+    # Золото после кондиционирования
     Au_total_mass = (Au_base or 0.0) * Q_base + (Au_ext or 0.0) * Q_ext_required
     mass_after_yield = mix_total_q * (yield_after_cond / 100)
     Au_mix = Au_total_mass / mass_after_yield if mass_after_yield else 0.0
     results['Mix_Au_g_t'] = round(Au_mix, 2)
+
     return results
