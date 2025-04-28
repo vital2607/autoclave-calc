@@ -82,8 +82,9 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
             return results
 
         As_mix    = ((As_base or 0.0) * Qb + (As_ext or 0.0) * Qe) / mix_q
-        f_Seq_mix = (f_Seq_base * Qb + f_Seq_ext * Qe) / mix_q
-        Seq_mix   = f_Seq_mix * 100
+        Seq_mix   = ((Seq_base or 0.0) * Qb + (Seq_ext or 0.0) * Qe) / mix_q  # ← исправил здесь
+
+        f_Seq_mix = Seq_mix / 100  # для расчёта массы серного эквивалента
 
         total_seq_mass = f_Seq_mix * mix_q
         num_autoclaves = total_seq_mass / seq_prod_per_year if seq_prod_per_year else 0.0
@@ -114,12 +115,10 @@ def calc_fc_autoclave(name_base, Au_base, S_base, As_base, Seq_base,
 
     # ─── РЕЖИМЫ 1 и 2 ───
     if mode == 1:
-        # расчёт коэффициента замещения
         coeff = (As_target - As_base) / (As_ext - As_target) if As_ext != As_target else 0.0
         Max_Qb = total_capacity / (f_Seq_base + f_Seq_ext * coeff) if (f_Seq_base + f_Seq_ext * coeff) else 0.0
         Max_Qe = Max_Qb * coeff
 
-        # Расчёт фактических масс:
         if Q_base and not Q_ext:
             Qb = Q_base
             Qe = Qb * coeff
